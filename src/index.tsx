@@ -16,24 +16,79 @@ import { setPublicPathFromBundle } from "@shared/public-path";
 // Must run before any dynamic `import()`, so that lazily loaded chunks come
 // from the CDN the bundle was served from and not from the hosting page.
 setPublicPathFromBundle("custom-code-widget.js");
-import React from "react";
-import ReactDOM from "react-dom/client";
 
 import { BlockFactory, BlockDefinition, ExternalBlockDefinition, BaseBlock } from "widget-sdk";
 import { configurationSchema, uiSchema } from "./configuration-schema";
+import { CODE_ATTRIBUTE } from "./attributes";
+import { CustomCode, encodeCustomCode, parseCustomCode } from "./custom-code";
+import { RunHandle, runCustomCode } from "./code-runner";
 import icon from "../resources/custom-code-widget.svg";
 import pkg from "../package.json";
 
 /** Attributes handled by the widget; mirrored in the configuration schema. */
-const widgetAttributes: string[] = [];
+const widgetAttributes: string[] = [CODE_ATTRIBUTE];
 
-const factory: BlockFactory = (BaseBlockClass, _widgetApi) => {
+let instanceCounter = 0;
+
+// React, the placeholder and the whole configuration editor live behind this
+// one `import()`, so a reader of a published page downloads none of it. What
+// remains in the bundle is the code runner and this file.
+const editorView = (): Promise<typeof import("./editor-view")> => import("./editor-view");
+
+const factory: BlockFactory = (BaseBlockClass, widgetApi) => {
   return class CustomCodeWidgetBlock extends BaseBlockClass implements BaseBlock {
-    private _root: ReactDOM.Root | null = null;
+    private _handle: RunHandle | null = null;
+    /** What is currently running, so unchanged code is left alone. */
+    private _running: string | null = null;
+    private readonly _instanceId = `i${(instanceCounter += 1)}`;
 
+    private readCode(): CustomCode {
+      const attrs = this.parseAttributes<Record<string, unknown>>();
+      return parseCustomCode(attrs[CODE_ATTRIBUTE]);
+    }
+
+    /**
+     * Runs the code on the published page and in the preview.
+     *
+     * The host renders both through `renderBlock` and the editing view through
+     * `renderBlockInEditor`, so no check for the mode is needed here — being
+     * called at all is the mode.
+     *
+     * The container is taken out of the layout: this widget shows nothing, it
+     * only carries code.
+     */
     public renderBlock(container: HTMLElement): void {
-      this._root ??= ReactDOM.createRoot(container);
-      this._root.render(<div />);
+      container.style.display = "none";
+
+      const code = this.readCode();
+      // Re-rendering with unchanged code must not run the script a second
+      // time: a script that registers a listener would then register two.
+      const fingerprint = encodeCustomCode(code);
+      if (this._handle && this._running === fingerprint) return;
+
+      this._handle?.stop();
+      this._handle = runCustomCode(code, { container, widgetApi }, this._instanceId);
+      this._running = fingerprint;
+    }
+
+    /**
+     * Shows what is stored, and runs none of it. See `editor-placeholder.tsx`
+     * for why.
+     */
+    public renderBlockInEditor(container: HTMLElement): void {
+      container.style.display = "";
+      const code = this.readCode();
+      void editorView().then((view) => {
+        view.ensureInjector();
+        view.renderPlaceholder(container, code);
+      });
+    }
+
+    public unmountBlock(container: HTMLElement): void {
+      this._handle?.stop();
+      this._handle = null;
+      this._running = null;
+      void editorView().then((view) => view.unmountPlaceholder(container));
     }
 
     public static get observedAttributes(): string[] {
@@ -53,7 +108,7 @@ const blockDefinition: BlockDefinition = {
   blockLevel: "block",
   configurationSchema: configurationSchema,
   uiSchema: uiSchema,
-  label: "CustomCodeWidget",
+  label: "Eigener Code",
   iconUrl: icon,
 };
 
@@ -63,4 +118,9 @@ const externalBlockDefinition: ExternalBlockDefinition = {
   version: pkg.version,
 };
 
-window.defineBlock(externalBlockDefinition);
+// The guard lets the module load in Jest/jsdom where defineBlock is absent,
+// while keeping the call unconditional in the real Staffbase host, where it is
+// always present — in the editor and on a published page alike.
+if (typeof window.defineBlock === "function") {
+  window.defineBlock(externalBlockDefinition);
+}
