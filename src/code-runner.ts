@@ -25,6 +25,7 @@
  */
 
 import { CustomCode } from "./custom-code";
+import { whenContentReady } from "./content-ready";
 
 /** Prefix of every message this widget logs, so a page's console stays readable. */
 export const LOG_PREFIX = "[custom-code-widget]";
@@ -100,15 +101,32 @@ function runJs(js: string, ctx: RunnerContext): () => void {
 /**
  * Applies `code` to the page.
  *
+ * The style element goes up at once whatever the timing says: CSS is
+ * declarative, so applying it early can only prevent a flash of unstyled
+ * content, never cause one. The timing governs the script, which is the part
+ * that needs the page's elements to exist.
+ *
  * @param instanceId distinguishes the style elements of several widgets on one
  * page, so stopping one leaves the others alone.
  * @returns a handle whose `stop` undoes what can be undone: the style element
- * always, the script's effects as far as it returned a cleanup function.
- * Calling `stop` more than once is harmless.
+ * always, the script's effects as far as it returned a cleanup function. A
+ * script still waiting for the page is called off rather than run. Calling
+ * `stop` more than once is harmless.
  */
 export function runCustomCode(code: CustomCode, ctx: RunnerContext, instanceId: string): RunHandle {
   const removeCss = applyCss(code.css, instanceId);
-  const stopJs = runJs(code.js, ctx);
+
+  let stopJs: (() => void) | null = null;
+  let cancelWait: (() => void) | null = null;
+
+  if (code.timing === "ready" && code.js.trim() !== "") {
+    cancelWait = whenContentReady(() => {
+      cancelWait = null;
+      stopJs = runJs(code.js, ctx);
+    });
+  } else {
+    stopJs = runJs(code.js, ctx);
+  }
 
   let stopped = false;
   return {
@@ -116,7 +134,8 @@ export function runCustomCode(code: CustomCode, ctx: RunnerContext, instanceId: 
       if (stopped) return;
       stopped = true;
       removeCss();
-      stopJs();
+      cancelWait?.();
+      stopJs?.();
     },
   };
 }

@@ -15,7 +15,7 @@ import * as React from "react";
 
 import { CodeEditor } from "./code-editor";
 import type { Language } from "./code-mirror";
-import { CustomCode } from "./custom-code";
+import { CustomCode, RunTiming } from "./custom-code";
 
 export interface CodeTabsProps {
   value: CustomCode;
@@ -26,6 +26,7 @@ export interface CodeTabsProps {
 const layoutStyle: React.CSSProperties = {
   flex: 1,
   minHeight: 0,
+  minWidth: 0,
   display: "flex",
   flexDirection: "column",
   gap: "12px",
@@ -67,6 +68,27 @@ const hintStyle: React.CSSProperties = {
   lineHeight: 1.5,
 };
 
+const timingRowStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  fontSize: "12px",
+  color: "#3a4148",
+};
+
+const selectStyle: React.CSSProperties = {
+  border: "1px solid #c3c9d0",
+  borderRadius: "4px",
+  padding: "3px 6px",
+  fontSize: "12px",
+  fontFamily: "inherit",
+};
+
+const TIMING_LABELS: Record<RunTiming, string> = {
+  immediate: "sofort beim Rendern",
+  ready: "wenn die Seite fertig geladen ist",
+};
+
 const LANGUAGES: { id: Language; label: string }[] = [
   { id: "css", label: "CSS" },
   { id: "js", label: "JavaScript" },
@@ -76,7 +98,9 @@ const HINTS: Record<Language, string> = {
   css: "Gilt für die ganze Seite. Wird beim Verlassen der Seite wieder entfernt.",
   js: "Läuft auf der veröffentlichten Seite und in der Vorschau, nicht in der Bearbeitung. " +
     "Verfügbar ist ctx mit container und widgetApi. Wer eine Funktion zurückgibt, " +
-    "bekommt sie beim Entfernen des Widgets zum Aufräumen aufgerufen.",
+    "bekommt sie beim Entfernen des Widgets zum Aufräumen aufgerufen. " +
+    "„Wenn die Seite fertig geladen ist“ wartet, bis sich am Seiteninhalt nichts mehr ändert — " +
+    "nötig, sobald das Skript Elemente anfasst, die Staffbase erst nachlädt. Das CSS gilt immer sofort.",
 };
 
 /**
@@ -112,12 +136,31 @@ export function CodeTabs({ value, onChange, onDone }: CodeTabsProps): React.Reac
 
       <p style={hintStyle}>{HINTS[active]}</p>
 
+      {active === "js" && (
+        <label style={timingRowStyle}>
+          Ausführen:
+          <select
+            style={selectStyle}
+            data-testid="code-timing"
+            value={value.timing}
+            onChange={(event) => onChange({ ...value, timing: event.target.value as RunTiming })}
+          >
+            {(Object.keys(TIMING_LABELS) as RunTiming[]).map((timing) => (
+              <option key={timing} value={timing}>
+                {TIMING_LABELS[timing]}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+
       {LANGUAGES.map(({ id }) => (
         <div
           key={id}
           style={{
             flex: 1,
             minHeight: 0,
+            minWidth: 0,
             display: active === id ? "flex" : "none",
             flexDirection: "column",
           }}

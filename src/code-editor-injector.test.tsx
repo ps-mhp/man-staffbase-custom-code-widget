@@ -42,7 +42,7 @@ describe("startCodeEditorInjector", () => {
   });
 
   it("seeds both editors from the stored value", async () => {
-    const stored = encodeCustomCode({ css: "body { color: red; }", js: "const a = 1;" });
+    const stored = encodeCustomCode({ css: "body { color: red; }", js: "const a = 1;", timing: "immediate" });
     const { stop } = await inject({ code: stored });
 
     expect(document.body.querySelector('[data-testid="code-editor-css"]')).toHaveTextContent("body { color: red; }");
@@ -52,7 +52,7 @@ describe("startCodeEditorInjector", () => {
   });
 
   it("writes edits back into the field encoded, so RJSF submits them", async () => {
-    const { container, stop, onSubmit } = await inject({ code: encodeCustomCode({ css: "a{}", js: "" }) });
+    const { container, stop, onSubmit } = await inject({ code: encodeCustomCode({ css: "a{}", js: "", timing: "immediate" }) });
 
     const editable = document.body.querySelector<HTMLElement>('[data-testid="code-editor-css-host"] [contenteditable]')!;
     await act(async () => {

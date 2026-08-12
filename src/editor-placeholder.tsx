@@ -47,8 +47,13 @@ const previewStyle: React.CSSProperties = {
   textOverflow: "ellipsis",
 };
 
-const PREVIEW_LINES = 4;
+const timingStyle: React.CSSProperties = {
+  marginTop: "6px",
+  fontSize: "12px",
+  color: "#5a6570",
+};
 
+const PREVIEW_LINES = 4;
 /** The first few lines, so the card says which snippet this is. */
 export function previewOf(code: string): string {
   const lines = code.trim().split("\n");
@@ -74,7 +79,16 @@ export function EditorPlaceholder({ code }: EditorPlaceholderProps): React.React
         <>
           <div>Wird auf der veröffentlichten Seite und in der Vorschau ausgeführt, hier nicht.</div>
           {code.css.trim() !== "" && <pre style={previewStyle}>{`CSS\n${previewOf(code.css)}`}</pre>}
-          {code.js.trim() !== "" && <pre style={previewStyle}>{`JavaScript\n${previewOf(code.js)}`}</pre>}
+          {code.js.trim() !== "" && (
+            <>
+              <pre style={previewStyle}>{`JavaScript\n${previewOf(code.js)}`}</pre>
+              <div style={timingStyle} data-testid="custom-code-timing">
+                {code.timing === "ready"
+                  ? "Skript startet, wenn die Seite fertig geladen ist."
+                  : "Skript startet sofort."}
+              </div>
+            </>
+          )}
         </>
       )}
     </div>

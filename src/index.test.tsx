@@ -15,7 +15,7 @@ import { act, waitFor } from "@testing-library/react";
 import type { BaseBlock, ExternalBlockDefinition } from "widget-sdk";
 
 import { CODE_ATTRIBUTE } from "./attributes";
-import { encodeCustomCode } from "./custom-code";
+import { encodeCustomCode, RunTiming } from "./custom-code";
 import { STYLE_MARKER } from "./code-runner";
 
 /**
@@ -52,8 +52,8 @@ function newBlock(): Block {
   return new (BlockClass as any)() as Block;
 }
 
-const withCode = (css: string, js: string): Record<string, unknown> => ({
-  [CODE_ATTRIBUTE]: encodeCustomCode({ css, js }),
+const withCode = (css: string, js: string, timing: RunTiming = "immediate"): Record<string, unknown> => ({
+  [CODE_ATTRIBUTE]: encodeCustomCode({ css, js, timing }),
 });
 
 const styles = (): HTMLStyleElement[] => Array.from(document.head.querySelectorAll(`style[${STYLE_MARKER}]`));

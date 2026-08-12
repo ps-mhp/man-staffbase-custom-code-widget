@@ -2,19 +2,32 @@ import { parseCustomCode, encodeCustomCode, isEmptyCode, EMPTY_CODE } from "./cu
 
 describe("parseCustomCode", () => {
   it("reverses encodeCustomCode, including characters an attribute would mangle", () => {
-    const code = { css: 'a[href="x"] { content: "<&>"; }', js: 'console.log("hi & bye");' };
+    const code = {
+      css: 'a[href="x"] { content: "<&>"; }',
+      js: 'console.log("hi & bye");',
+      timing: "ready" as const,
+    };
 
     expect(parseCustomCode(encodeCustomCode(code))).toEqual(code);
   });
 
   it("encodes to a value free of quotes and angle brackets", () => {
-    const encoded = encodeCustomCode({ css: '"<&>"', js: "'\"'" });
+    const encoded = encodeCustomCode({ css: '"<&>"', js: "'\"'", timing: "immediate" });
 
     expect(encoded).toMatch(/^b64:[A-Za-z0-9+/]*={0,2}$/);
   });
 
   it("reads plain JSON that was typed into the raw field", () => {
-    expect(parseCustomCode('{"css":"body{}","js":"1"}')).toEqual({ css: "body{}", js: "1" });
+    expect(parseCustomCode('{"css":"body{}","js":"1"}')).toEqual({
+      css: "body{}",
+      js: "1",
+      timing: "immediate",
+    });
+  });
+
+  it("falls back to running immediately when the timing is missing or unknown", () => {
+    expect(parseCustomCode('{"css":"","js":"","timing":"whenever"}').timing).toBe("immediate");
+    expect(parseCustomCode('{"css":"","js":"","timing":"ready"}').timing).toBe("ready");
   });
 
   it.each([

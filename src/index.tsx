@@ -21,7 +21,7 @@ import { BlockFactory, BlockDefinition, ExternalBlockDefinition, BaseBlock } fro
 import { configurationSchema, uiSchema } from "./configuration-schema";
 import { CODE_ATTRIBUTE } from "./attributes";
 import { CustomCode, encodeCustomCode, parseCustomCode } from "./custom-code";
-import { RunHandle, runCustomCode } from "./code-runner";
+import { RunHandle, runCustomCode, LOG_PREFIX } from "./code-runner";
 import icon from "../resources/custom-code-widget.svg";
 import pkg from "../package.json";
 
@@ -33,7 +33,20 @@ let instanceCounter = 0;
 // React, the placeholder and the whole configuration editor live behind this
 // one `import()`, so a reader of a published page downloads none of it. What
 // remains in the bundle is the code runner and this file.
-const editorView = (): Promise<typeof import("./editor-view")> => import("./editor-view");
+//
+// A failure here is reported rather than swallowed: the chunk sits next to the
+// bundle, so it goes missing whenever the two come from different builds — and
+// the symptom is an editor that simply never appears, with nothing in the
+// console to connect it to a stale `dist/`.
+const editorView = (): Promise<typeof import("./editor-view") | null> =>
+  import("./editor-view").catch((error: unknown) => {
+    console.error(
+      `${LOG_PREFIX} Die Editor-Ansicht konnte nicht geladen werden. ` +
+        `Meist liegt neben dem Bundle ein Chunk aus einem anderen Build — dist/ neu bauen.`,
+      error,
+    );
+    return null;
+  });
 
 const factory: BlockFactory = (BaseBlockClass, widgetApi) => {
   return class CustomCodeWidgetBlock extends BaseBlockClass implements BaseBlock {
@@ -79,6 +92,7 @@ const factory: BlockFactory = (BaseBlockClass, widgetApi) => {
       container.style.display = "";
       const code = this.readCode();
       void editorView().then((view) => {
+        if (!view) return;
         view.ensureInjector();
         view.renderPlaceholder(container, code);
       });
@@ -88,7 +102,7 @@ const factory: BlockFactory = (BaseBlockClass, widgetApi) => {
       this._handle?.stop();
       this._handle = null;
       this._running = null;
-      void editorView().then((view) => view.unmountPlaceholder(container));
+      void editorView().then((view) => view?.unmountPlaceholder(container));
     }
 
     public static get observedAttributes(): string[] {

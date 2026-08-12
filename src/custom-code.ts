@@ -28,9 +28,20 @@ import { decodePayload, encodePayload, isPayload } from "@shared/payload";
 export interface CustomCode {
   css: string;
   js: string;
+  /**
+   * When the script runs. `immediate` is the moment the widget renders;
+   * `ready` waits for the page to settle (see `content-ready.ts`).
+   */
+  timing: RunTiming;
 }
 
-export const EMPTY_CODE: CustomCode = { css: "", js: "" };
+/** The two moments a script can start at. */
+export type RunTiming = "immediate" | "ready";
+
+/** Anything else stored in the attribute is read as the safer of the two. */
+const asTiming = (value: unknown): RunTiming => (value === "ready" ? "ready" : "immediate");
+
+export const EMPTY_CODE: CustomCode = { css: "", js: "", timing: "immediate" };
 
 const asString = (value: unknown): string => (typeof value === "string" ? value : "");
 
@@ -52,7 +63,7 @@ export function parseCustomCode(raw: unknown): CustomCode {
     const parsed: unknown = JSON.parse(json);
     if (typeof parsed !== "object" || parsed === null) return EMPTY_CODE;
     const record = parsed as Record<string, unknown>;
-    return { css: asString(record.css), js: asString(record.js) };
+    return { css: asString(record.css), js: asString(record.js), timing: asTiming(record.timing) };
   } catch {
     return EMPTY_CODE;
   }
@@ -60,8 +71,14 @@ export function parseCustomCode(raw: unknown): CustomCode {
 
 /** Reverses {@link parseCustomCode}. */
 export function encodeCustomCode(code: CustomCode): string {
-  return encodePayload(JSON.stringify({ css: code.css, js: code.js }));
+  return encodePayload(JSON.stringify({ css: code.css, js: code.js, timing: code.timing }));
 }
 
-/** True when there is nothing to run. */
-export const isEmptyCode = (code: CustomCode): boolean => code.css.trim() === "" && code.js.trim() === "";
+/**
+ * True when there is nothing to run.
+ *
+ * Takes only the two texts, because the timing cannot make empty code do
+ * something.
+ */
+export const isEmptyCode = (code: Pick<CustomCode, "css" | "js">): boolean =>
+  code.css.trim() === "" && code.js.trim() === "";

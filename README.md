@@ -34,6 +34,25 @@ return () => clearInterval(timer);
 Fehler im Code landen in der Konsole und werden verschluckt: ein Tippfehler
 darf die Seite nicht abräumen.
 
+## Wann das Skript startet
+
+Im JavaScript-Reiter steht eine Auswahl:
+
+- **sofort beim Rendern** (Voreinstellung) — das Skript läuft, sobald das
+  Widget gerendert wird.
+- **wenn die Seite fertig geladen ist** — das Skript wartet auf `load` und
+  danach auf eine Ruhephase, in der sich am Seiteninhalt nichts mehr ändert.
+
+Die zweite Einstellung ist für Skripte gedacht, die Elemente anfassen, die
+Staffbase erst nachlädt. In einer Single-Page-App feuert `load`, während der
+Artikel noch leer ist, und `DOMContentLoaded` noch früher — beobachtbar ist
+nur, dass das Dokument zur Ruhe kommt. Nach spätestens fünf Sekunden läuft das
+Skript in jedem Fall, damit eine Seite mit Dauer-Animation es nicht auf immer
+blockiert.
+
+Das CSS gilt immer sofort: früh angewandt kann es nur verhindern, dass die
+Seite kurz ungestylt aufblitzt.
+
 ## Wo es läuft — und wo nicht
 
 Ausgeführt wird auf der veröffentlichten Seite und in der Vorschau. In der
@@ -46,11 +65,17 @@ zerlegen, in der man es korrigieren müsste.
 Der Konfigurationsdialog öffnet ein Modal mit zwei Reitern, CSS und
 JavaScript, darin ein CodeMirror-Editor mit Syntaxprüfung. Fehler werden im
 Text markiert und unter dem Editor im Klartext genannt; sie blockieren das
-Speichern nicht.
+Speichern nicht. Lange Zeilen scrollen waagerecht, statt das Modal zu
+verbreitern.
+
+Der Knopf **Formatieren** rückt den Code per Prettier ein. Lässt er sich nicht
+parsen, bleibt der Text unverändert und die Meldung des Parsers steht unter
+dem Editor.
 
 CodeMirror liegt in einem eigenen Chunk und wird erst beim Öffnen des Modals
-geladen. Auch React kommt nur in der Bearbeitungsansicht dazu: das Bundle, das
-ein Leser der Seite lädt, enthält weder das eine noch das andere.
+geladen, Prettier in einem weiteren erst beim ersten Druck auf den Knopf. Auch
+React kommt nur in der Bearbeitungsansicht dazu: das Bundle, das ein Leser der
+Seite lädt, enthält nichts davon.
 
 ## Reichweite
 

@@ -47,4 +47,38 @@ describe("CodeEditor without CodeMirror", () => {
       expect(screen.getByTestId("editor-status")).toHaveTextContent("Zeile 1: Klammer wurde nicht geschlossen");
     });
   });
+
+  it("formats the document on demand and reports the result", async () => {
+    const onChange = jest.fn();
+    render(
+      <CodeEditor language="css" value="body{color:red;background:blue}" onChange={onChange} testId="editor" />,
+    );
+
+    const button = await screen.findByTestId("editor-format");
+    await act(async () => {
+      button.click();
+    });
+
+    const formatted = "body {\n  color: red;\n  background: blue;\n}\n";
+    await waitFor(() => {
+      expect(screen.getByLabelText("CSS")).toHaveValue(formatted);
+    });
+    expect(onChange).toHaveBeenLastCalledWith(formatted);
+  });
+
+  it("explains why unparsable code could not be formatted, and leaves it untouched", async () => {
+    const onChange = jest.fn();
+    render(<CodeEditor language="js" value="const = ;" onChange={onChange} testId="editor" />);
+
+    const button = await screen.findByTestId("editor-format");
+    await act(async () => {
+      button.click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("editor-status")).not.toHaveTextContent("Keine Syntaxfehler gefunden");
+    });
+    expect(screen.getByLabelText("JavaScript")).toHaveValue("const = ;");
+    expect(onChange).not.toHaveBeenCalled();
+  });
 });

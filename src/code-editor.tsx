@@ -15,6 +15,7 @@ import * as React from "react";
 
 import type { EditorView } from "@codemirror/view";
 import { loadCodeMirror, CodeMirrorBundle, Language } from "./code-mirror";
+import { formatCode } from "./format-code";
 import { checkSyntax, formatProblem } from "./syntax-check";
 
 export interface CodeEditorProps {
@@ -28,6 +29,9 @@ export interface CodeEditorProps {
 const wrapperStyle: React.CSSProperties = {
   flex: 1,
   minHeight: 0,
+  // Without this a long line makes the editor wider than the modal instead of
+  // scrollable inside it: a flex item's automatic minimum size is its content.
+  minWidth: 0,
   display: "flex",
   flexDirection: "column",
   border: "1px solid #d5d9de",
@@ -38,13 +42,18 @@ const wrapperStyle: React.CSSProperties = {
 const hostStyle: React.CSSProperties = {
   flex: 1,
   minHeight: 0,
-  overflow: "auto",
+  minWidth: 0,
+  // Vertically the host scrolls, horizontally CodeMirror's own scroller does —
+  // letting both scroll sideways would produce two scrollbars for one axis.
+  overflowY: "auto",
+  overflowX: "hidden",
   fontSize: "13px",
 };
 
 const fallbackStyle: React.CSSProperties = {
   flex: 1,
   minHeight: 0,
+  minWidth: 0,
   width: "100%",
   border: "none",
   padding: "8px",
@@ -52,6 +61,10 @@ const fallbackStyle: React.CSSProperties = {
   fontSize: "13px",
   boxSizing: "border-box",
   resize: "none",
+  // Code is read by its indentation; wrapping long lines would destroy it.
+  whiteSpace: "pre",
+  overflowWrap: "normal",
+  overflowX: "auto",
 };
 
 const problemStyle: React.CSSProperties = {
@@ -61,6 +74,9 @@ const problemStyle: React.CSSProperties = {
   borderTop: "1px solid #f0c4c0",
   fontSize: "12px",
   fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+  // An engine's message can be a single very long token; it wraps rather than
+  // widening the modal it sits in.
+  overflowWrap: "anywhere",
 };
 
 const okStyle: React.CSSProperties = {
@@ -70,6 +86,29 @@ const okStyle: React.CSSProperties = {
   borderTop: "1px solid #e2e6ea",
   fontSize: "12px",
 };
+
+/** Holds the message and the button on one line, message first. */
+const statusRowStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "10px",
+};
+
+const statusTextStyle: React.CSSProperties = {
+  flex: 1,
+  minWidth: 0,
+};
+
+const formatButtonStyle = (isBusy: boolean): React.CSSProperties => ({
+  flex: "none",
+  border: "1px solid #c3c9d0",
+  borderRadius: "4px",
+  background: "#fff",
+  color: "#3a4148",
+  cursor: isBusy ? "progress" : "pointer",
+  padding: "3px 10px",
+  fontSize: "12px",
+});
 
 /**
  * A CodeMirror editor for one language, with the first syntax problem spelled
@@ -94,6 +133,38 @@ export function CodeEditor({ language, value, onChange, testId }: CodeEditorProp
   const [text, setText] = React.useState(value);
   /** Line of the parser's first mark, used where the engine reports none. */
   const [parsedErrorLine, setParsedErrorLine] = React.useState<number | undefined>(undefined);
+  const [isFormatting, setIsFormatting] = React.useState(false);
+  /** Why the last formatting attempt failed, shown instead of the syntax line. */
+  const [formatError, setFormatError] = React.useState<string | null>(null);
+
+  /**
+   * Replaces the whole document with `next`.
+   *
+   * Goes through a transaction rather than a fresh editor state, because a
+   * transaction is what CodeMirror can map the selection through — the cursor
+   * survives reformatting instead of jumping to the top. The update listener
+   * reports the change onwards, which is why `onChange` is called here only
+   * for the textarea fallback.
+   */
+  const replaceDocument = (next: string): void => {
+    const view = viewRef.current;
+    if (view) {
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: next } });
+      return;
+    }
+    setText(next);
+    onChangeRef.current(next);
+  };
+
+  const handleFormat = (): void => {
+    if (isFormatting) return;
+    setIsFormatting(true);
+    void formatCode(language, text).then((result) => {
+      setIsFormatting(false);
+      setFormatError(result.ok ? null : result.message);
+      if (result.ok) replaceDocument(result.code);
+    });
+  };
 
   React.useEffect(() => {
     let cancelled = false;
@@ -138,9 +209,18 @@ export function CodeEditor({ language, value, onChange, testId }: CodeEditorProp
             if (!update.docChanged) return;
             const next = update.state.doc.toString();
             setText(next);
+            setFormatError(null);
             onChangeRef.current(next);
           }),
-          bundle.EditorView.theme({ "&": { height: "100%" } }),
+          // CodeMirror measures itself against its host. Pinning it to the
+          // host's box is what turns a long line into a scroll instead of
+          // growth: `.cm-scroller` then has a width to scroll within, and
+          // `.cm-content` is allowed to be wider than it.
+          bundle.EditorView.theme({
+            "&": { height: "100%", maxWidth: "100%" },
+            ".cm-scroller": { overflow: "auto" },
+            ".cm-content": { minWidth: "max-content" },
+          }),
         ],
       }),
     });
@@ -154,6 +234,11 @@ export function CodeEditor({ language, value, onChange, testId }: CodeEditorProp
 
   const found = checkSyntax(language, text);
   const problem = found === null ? null : { ...found, line: found.line ?? parsedErrorLine };
+  // A failed reformat has the more specific message of the two: it names the
+  // position the parser stopped at, where the syntax check only names the
+  // problem.
+  const message = formatError ?? (problem ? formatProblem(problem) : "Keine Syntaxfehler gefunden");
+  const isBad = formatError !== null || problem !== null;
 
   return (
     <div style={wrapperStyle} data-testid={testId}>
@@ -167,12 +252,23 @@ export function CodeEditor({ language, value, onChange, testId }: CodeEditorProp
           value={text}
           onChange={(event) => {
             setText(event.target.value);
+            setFormatError(null);
             onChange(event.target.value);
           }}
         />
       )}
-      <div style={problem ? problemStyle : okStyle} data-testid={testId && `${testId}-status`}>
-        {problem ? formatProblem(problem) : "Keine Syntaxfehler gefunden"}
+      <div style={{ ...(isBad ? problemStyle : okStyle), ...statusRowStyle }} data-testid={testId && `${testId}-status`}>
+        <span style={statusTextStyle}>{message}</span>
+        <button
+          type="button"
+          data-testid={testId && `${testId}-format`}
+          style={formatButtonStyle(isFormatting)}
+          disabled={isFormatting}
+          title="Code einrücken und umbrechen (Prettier)"
+          onClick={handleFormat}
+        >
+          {isFormatting ? "Formatiere…" : "Formatieren"}
+        </button>
       </div>
     </div>
   );
