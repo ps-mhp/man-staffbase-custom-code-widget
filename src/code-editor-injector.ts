@@ -38,6 +38,6 @@ export function startCodeEditorInjector(root: ParentNode = document): () => void
     reopenTestId: "code-editor-reopen",
     parse: parseCustomCode,
     serialize: encodeCustomCode,
-    render: ({ value, onChange, onDone }) => React.createElement(CodeTabs, { value, onChange, onDone }),
+    render: ({ value, onChange, onSave }) => React.createElement(CodeTabs, { value, onChange, onDone: onSave }),
   });
 }

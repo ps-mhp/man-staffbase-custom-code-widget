@@ -51,13 +51,18 @@ describe("startCodeEditorInjector", () => {
     await act(async () => stop());
   });
 
-  it("writes edits back into the field encoded, so RJSF submits them", async () => {
+  it("writes saved edits back into the field encoded, so RJSF submits them", async () => {
     const { container, stop, onSubmit } = await inject({ code: encodeCustomCode({ css: "a{}", js: "", timing: "immediate" }) });
 
     const editable = document.body.querySelector<HTMLElement>('[data-testid="code-editor-css-host"] [contenteditable]')!;
     await act(async () => {
       editable.focus();
       await userEvent.type(editable, "b");
+    });
+
+    // Edits stay in the modal's draft until they are saved.
+    await act(async () => {
+      (document.body.querySelector('[data-testid="code-tabs-done"]') as HTMLButtonElement).click();
     });
 
     await act(async () => {
