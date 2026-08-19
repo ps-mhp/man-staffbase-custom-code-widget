@@ -1,7 +1,6 @@
 {
   "title": "Kod niestandardowy",
   "summary": "Osadza własny kod CSS i JavaScript dla całej strony.",
-  "icon": "🧑‍💻",
   "pages": [
     {
       "id": "overview",

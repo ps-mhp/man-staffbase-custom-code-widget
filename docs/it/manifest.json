@@ -1,7 +1,6 @@
 {
   "title": "Codice personalizzato",
   "summary": "Incorpora i propri file CSS e JavaScript per l'intera pagina.",
-  "icon": "🧑‍💻",
   "pages": [
     {
       "id": "overview",

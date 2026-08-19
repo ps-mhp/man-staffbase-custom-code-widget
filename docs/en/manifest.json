@@ -1,7 +1,6 @@
 {
   "title": "Custom Code",
   "summary": "Embed your own CSS and JavaScript for the entire page.",
-  "icon": "🧑‍💻",
   "pages": [
     {
       "id": "overview",

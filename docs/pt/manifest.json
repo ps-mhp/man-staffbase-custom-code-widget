@@ -1,7 +1,6 @@
 {
   "title": "Código personalizado",
   "summary": "Incorpora o próprio CSS e JavaScript em toda a página.",
-  "icon": "🧑‍💻",
   "pages": [
     {
       "id": "overview",

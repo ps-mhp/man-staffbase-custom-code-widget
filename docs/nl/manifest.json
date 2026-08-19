@@ -1,7 +1,6 @@
 {
   "title": "Aangepaste code",
   "summary": "Integreer eigen CSS en JavaScript voor de hele pagina.",
-  "icon": "🧑‍💻",
   "pages": [
     {
       "id": "overview",
