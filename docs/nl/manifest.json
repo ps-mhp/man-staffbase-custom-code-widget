@@ -1,11 +1,16 @@
 {
   "title": "Aangepaste code",
-  "summary": "Integreer eigen CSS en JavaScript voor de hele pagina.",
+  "summary": "Sla eigen CSS en JavaScript op voor de hele pagina — onzichtbaar, voor gevallen waarin geen gebruik wordt gemaakt van de ingebouwde functies van het CMS.",
   "pages": [
     {
       "id": "overview",
       "title": "Overzicht",
       "file": "overview.md"
+    },
+    {
+      "id": "usage",
+      "title": "Stap voor stap",
+      "file": "usage.md"
     },
     {
       "id": "settings",

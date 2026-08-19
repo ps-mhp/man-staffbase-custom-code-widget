@@ -1,18 +1,41 @@
 # Custom Code
 
-The Custom Code widget does not display anything on its own. It is
-invisible on the page and takes up no space—it simply contains the code that was
-entered in the configuration dialog:
+The Custom Code widget is the tool for anything that the CMS’s built-in features
+can’t handle: special formatting, selectively hiding an
+element, or a small interactive feature.
 
-- **CSS** is loaded globally into the page and therefore applies to the entire
-  page, not just the widget container.
-- **JavaScript** runs with access to the page and can modify it
+**It doesn’t display anything itself.** On the published page, it’s
+invisible and takes up no space. It simply contains the code you enter in
+the configuration dialog:
+
+- **CSS** changes the appearance of the page. It applies to the **entire page**,
+  not just the widget’s area.
+- **JavaScript** changes the page’s behavior and can modify it
   as desired.
 
-The widget is suitable for anything that cannot be achieved using the CMS’s
-built-in features: special formatting, small interactions, and the targeted
-showing or hiding of elements.
+## Before You Begin
 
-> For this reason, this documentation page does **not** embed a live example—
-> otherwise, the embedded code would run against this page itself instead of
-> the actual target page.
+This widget requires programming knowledge. There is no check to
+prevent an error from rendering the page unusable—while the widget
+does catch errors, “incorrect but valid” code will still execute. If you just want to
+embed an image, a table, or a post, you’re better off using the other
+widgets.
+
+Rule of thumb: First check whether you can achieve the desired result with a
+standard widget. Custom code is a last resort, not the first option.
+
+## Where the Code Runs
+
+| Location | JavaScript | CSS |
+| --- | --- | --- |
+| Published page | runs | takes effect |
+| Preview | runs | takes effect |
+| CMS editor (edit view) | **does not** run | **does not** take effect |
+
+In the editor, only a card with the first few lines
+of the stored code appears where the widget would normally be. This is intentional: Otherwise, a faulty script would
+break up the very interface you’re trying to fix. So,
+always use the **Preview** for testing.
+
+For the same reason, **no live example** is shown on this documentation page—
+otherwise, the code would run against the documentation instead of your page.

@@ -1,11 +1,16 @@
 {
   "title": "Código personalizado",
-  "summary": "Incorpora tu propio CSS y JavaScript para toda la página.",
+  "summary": "Almacena CSS y JavaScript propios para toda la página —de forma invisible—, para los casos en los que no se disponga de herramientas integradas en el CMS.",
   "pages": [
     {
       "id": "overview",
       "title": "Resumen",
       "file": "overview.md"
+    },
+    {
+      "id": "usage",
+      "title": "Paso a paso",
+      "file": "usage.md"
     },
     {
       "id": "settings",

@@ -1,18 +1,41 @@
 # Code personnalisé
 
-Le widget « Code personnalisé » n’affiche rien en soi. Sur la page, il est
-invisible et ne prend pas de place — il contient uniquement le code saisi dans la
-boîte de dialogue de configuration :
+Le widget « Code personnalisé » est l'outil idéal pour tout ce que les fonctionnalités natives du CMS
+ne permettent pas de faire : une mise en forme spécifique, le masquage ciblé d'un
+élément, une petite interaction.
 
-- Le **CSS** est chargé globalement dans la page et s’applique donc à l’ensemble de la
-  page, et pas seulement au conteneur du widget.
-- Le **JavaScript** s’exécute en ayant accès à la page et peut la
-  modifier à volonté.
+**Il n'affiche rien en soi.** Sur la page publiée, il est
+invisible et ne prend pas de place. Il ne contient que le code que vous
+définissez dans la boîte de dialogue de configuration :
 
-Ce widget est adapté à tout ce qui n’est pas réalisable avec les fonctionnalités
-intégrées du CMS : mises en forme spéciales, petites interactions,
-affichage ou le masquage d’éléments.
+- **CSS** modifie l'apparence de la page. Il s'applique à **toute la page**,
+  et pas seulement à la zone du widget.
+- **JavaScript** modifie le comportement de la page et peut la
+  remodeler à volonté.
 
-> C’est pourquoi cette page de documentation n’intègre **aucun exemple en direct**
-> — sinon, le code fourni s’exécuterait sur cette page elle-même plutôt que sur
-> la page cible réelle.
+## Avant de commencer
+
+Ce widget nécessite des connaissances en programmation. Il n’y a aucun contrôle
+empêchant qu’une erreur rende la page inutilisable — le widget intercepte
+certes les erreurs, mais un code « incorrect, mais valide » fonctionnera quand même. Si vous souhaitez simplement
+intégrer une image, un tableau ou un article, les autres
+widgets sont plus adaptés.
+
+Règle d’or : vérifiez d’abord si le résultat souhaité peut être obtenu avec un
+widget standard. Le code personnalisé est le dernier recours, pas la première solution.
+
+## Où le code s’exécute-t-il ?
+
+| Emplacement | JavaScript | CSS |
+| --- | --- | --- |
+| Page publiée | s'exécute | s'applique |
+| Aperçu | s'exécute | s'applique |
+| Éditeur CMS (mode édition) | ne s'exécute **pas** | ne s'applique **pas** |
+
+Dans l’éditeur, à la place du widget, vous ne verrez qu’une carte contenant les premières lignes
+du code enregistré. C’est voulu : sinon, un script défectueux risquerait de
+perturber précisément l’interface que vous êtes en train de corriger. Pour
+les tests, utilisez donc toujours l’**aperçu**.
+
+Pour la même raison, **aucun exemple en direct** n’est présenté
+sur cette page de documentation — sinon, le code s’exécuterait sur la documentation plutôt que sur votre page.

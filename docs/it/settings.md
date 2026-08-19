@@ -1,35 +1,29 @@
 # Impostazioni
 
-La finestra di dialogo di configurazione apre una finestra modale con due schede:
+La finestra di dialogo di configurazione mostra un campo **Codice** che non va mai modificato manualmente.
+Le modifiche vanno apportate nell’editor di codice situato sopra; il pulsante **Modifica codice**
+lo riapre, mentre **Fine** applica le modifiche al campo.
+
+## Schede nell’editor di codice
 
 | Scheda | Descrizione |
 | --- | --- |
-| CSS | Viene utilizzato come `<style>` global in die Seite eingefügt und gilt für die ganze Seite, nicht nur für den Widget-Container. |
-| JavaScript | Läuft als Funktionskörper mit Zugriff auf `container` (das Widget-Element) und `widgetApi`. |
+| CSS | Viene inserito nella pagina come foglio di stile e si applica all’**intera pagina**, non solo all’area del widget. Se il widget viene rimosso, anche il CSS scompare. |
+| JavaScript | Viene eseguito con accesso a `container` (l’elemento del widget) e a `widgetApi` (l’interfaccia Staffbase). |
 
-Zusätzlich lässt sich im JavaScript-Reiter der **Startzeitpunkt** wählen:
+## Momento di avvio (“Esegui:”, solo nella scheda JavaScript)
 
-| Wert | Bedeutung |
+| Valore | Significato |
 | --- | --- |
-| Sofort beim Rendern (Voreinstellung) | Das Skript läuft, sobald das Widget gerendert wird. |
-| Wenn die Seite fertig geladen ist | Das Skript wartet, bis sich am Seiteninhalt nichts mehr ändert — gedacht für Skripte, die Elemente anfassen, die erst nachgeladen werden. Nach spätestens 5 Sekunden läuft es in jedem Fall. |
+| immediatamente al momento del rendering | Impostazione predefinita. Lo script si avvia non appena appare il widget. Adatto a tutto ciò che non necessita di altri elementi della pagina. |
+| quando la pagina è stata caricata completamente | Lo script attende che il contenuto della pagina non subisca più modifiche — per script che modificano elementi caricati successivamente. In ogni caso, l’esecuzione inizia al più tardi dopo 5 secondi. |
 
-Das CSS gilt in beiden Fällen sofort — früh angewandt kann es nur verhindern,
-dass die Seite kurz ungestylt aufblitzt.
+Il CSS viene applicato immediatamente in entrambi i casi. È un comportamento intenzionale: in questo modo la pagina
+non appare per un istante senza stile.
 
-Der Editor prüft die Syntax beim Tippen: Fehler werden im Text markiert und
-unter dem Editor im Klartext genannt, blockieren das Speichern aber nicht. Der
-Knopf **Formatieren** rückt den Code automatisch per Prettier ein.
+## Aiuti nell’editor
 
-Wer eine JavaScript-Funktion zurückgibt, bekommt sie beim Entfernen des
-Widgets zum Aufräumen aufgerufen — der Weg, um Timer oder Event-Listener
-wieder loszuwerden:
-
-```js
-const timer = setInterval(() => console.log("tick"), 1000);
-return () => clearInterval(timer);
-```
-
-Fehler im Code landen in der Browser-Konsole und werden abgefangen: ein
-Tippfehler darf die Seite nicht lahmlegen.
-</style>
+| Funzione | Descrizione |
+| --- | --- |
+| Controllo della sintassi | Viene eseguito durante la digitazione. Sotto l’editor compare la dicitura «Nessun errore di sintassi rilevato» oppure la posizione dell’errore con il numero di riga. **Non impedisce il salvataggio**. Per il CSS viene verificata solo la struttura delle parentesi, non ogni singola proprietà. |
+| Formattazione | Indenta automaticamente il codice in modo ordinato. |

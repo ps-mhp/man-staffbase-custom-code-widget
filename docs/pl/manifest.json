@@ -1,11 +1,16 @@
 {
   "title": "Kod niestandardowy",
-  "summary": "Osadza własny kod CSS i JavaScript dla całej strony.",
+  "summary": "Zapisuje własny kod CSS i JavaScript dla całej strony — niewidoczny, na wypadek braku wbudowanych narzędzi CMS.",
   "pages": [
     {
       "id": "overview",
       "title": "Przegląd",
       "file": "overview.md"
+    },
+    {
+      "id": "usage",
+      "title": "Krok po kroku",
+      "file": "usage.md"
     },
     {
       "id": "settings",

@@ -1,35 +1,29 @@
 # Paramètres
 
-La boîte de dialogue de configuration ouvre une fenêtre modale comportant deux onglets :
+La boîte de dialogue de configuration affiche un champ **Code** qui n'est jamais modifié manuellement
+. Les modifications s'effectuent dans l'éditeur de code situé au-dessus ; le bouton **Modifier le code**
+le rouvre, tandis que **Terminé** applique l'état actuel au champ.
+
+## Onglets de l’éditeur de code
 
 | Onglet | Description |
 | --- | --- |
-| CSS | S'affiche sous la forme `<style>` global in die Seite eingefügt und gilt für die ganze Seite, nicht nur für den Widget-Container. |
-| JavaScript | Läuft als Funktionskörper mit Zugriff auf `container` (das Widget-Element) und `widgetApi`. |
+| CSS | Est inséré dans la page sous forme de feuille de style et s’applique à **toute la page**, pas seulement à la zone du widget. Si le widget est supprimé, le CSS disparaît également. |
+| JavaScript | S'exécute avec un accès à `container` (l'élément du widget) et à `widgetApi` (l'interface Staffbase). |
 
-Zusätzlich lässt sich im JavaScript-Reiter der **Startzeitpunkt** wählen:
+## Moment de démarrage (« Exécuter : », uniquement dans l’onglet JavaScript)
 
-| Wert | Bedeutung |
+| Valeur | Signification |
 | --- | --- |
-| Sofort beim Rendern (Voreinstellung) | Das Skript läuft, sobald das Widget gerendert wird. |
-| Wenn die Seite fertig geladen ist | Das Skript wartet, bis sich am Seiteninhalt nichts mehr ändert — gedacht für Skripte, die Elemente anfassen, die erst nachgeladen werden. Nach spätestens 5 Sekunden läuft es in jedem Fall. |
+| dès le rendu | Paramètre par défaut. Le script démarre dès que le widget s’affiche. Convient à tout ce qui ne nécessite pas d’autres éléments de la page. |
+| une fois le chargement de la page terminé | Le script attend que le contenu de la page cesse de changer — pour les scripts qui manipulent des éléments chargés ultérieurement. Il démarre dans tous les cas au plus tard après 5 secondes. |
 
-Das CSS gilt in beiden Fällen sofort — früh angewandt kann es nur verhindern,
-dass die Seite kurz ungestylt aufblitzt.
+Le CSS s’applique immédiatement dans les deux cas. C’est voulu : ainsi, la page
+n’apparaît pas brièvement sans mise en forme.
 
-Der Editor prüft die Syntax beim Tippen: Fehler werden im Text markiert und
-unter dem Editor im Klartext genannt, blockieren das Speichern aber nicht. Der
-Knopf **Formatieren** rückt den Code automatisch per Prettier ein.
+## Aides dans l’éditeur
 
-Wer eine JavaScript-Funktion zurückgibt, bekommt sie beim Entfernen des
-Widgets zum Aufräumen aufgerufen — der Weg, um Timer oder Event-Listener
-wieder loszuwerden:
-
-```js
-const timer = setInterval(() => console.log("tick"), 1000);
-return () => clearInterval(timer);
-```
-
-Fehler im Code landen in der Browser-Konsole und werden abgefangen: ein
-Tippfehler darf die Seite nicht lahmlegen.
-</style>
+| Fonction | Description |
+| --- | --- |
+| Vérification syntaxique | S’exécute au fur et à mesure de la saisie. Sous l’éditeur, le message « Aucune erreur de syntaxe détectée » s’affiche, ou bien l’emplacement de l’erreur avec son numéro de ligne. Cela **n’empêche pas l’enregistrement**. Pour le CSS, seule la structure des accolades est vérifiée, et non chaque propriété. |
+| Mise en forme | Indente automatiquement le code de manière soignée. |

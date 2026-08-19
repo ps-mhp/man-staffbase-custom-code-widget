@@ -1,35 +1,29 @@
 # Ustawienia
 
-Okno dialogowe konfiguracji otwiera okno modalne z dwiema zakładkami:
+Okno dialogowe konfiguracji zawiera pole **Kod**, którego nigdy nie edytuje się ręcznie.
+Edycja odbywa się w edytorze kodu znajdującym się powyżej; przycisk **Edytuj kod**
+otwiera go ponownie, a przycisk **Gotowe** przenosi aktualny stan do tego pola.
+
+## Zakładki w edytorze kodu
 
 | Zakładka | Opis |
 | --- | --- |
-| CSS | Służy jako `<style>` global in die Seite eingefügt und gilt für die ganze Seite, nicht nur für den Widget-Container. |
-| JavaScript | Läuft als Funktionskörper mit Zugriff auf `container` (das Widget-Element) und `widgetApi`. |
+| CSS | Jest wstawiany do strony jako arkusz stylów i dotyczy **całej strony**, a nie tylko obszaru widżetu. Jeśli widget zostanie usunięty, CSS również zniknie. |
+| JavaScript | Działa z dostępem do `container` (elementu widgetu) i `widgetApi` (interfejsu Staffbase). |
 
-Zusätzlich lässt sich im JavaScript-Reiter der **Startzeitpunkt** wählen:
+## Czas rozpoczęcia („Uruchom:”, tylko w zakładce JavaScript)
 
-| Wert | Bedeutung |
+| Wartość | Znaczenie |
 | --- | --- |
-| Sofort beim Rendern (Voreinstellung) | Das Skript läuft, sobald das Widget gerendert wird. |
-| Wenn die Seite fertig geladen ist | Das Skript wartet, bis sich am Seiteninhalt nichts mehr ändert — gedacht für Skripte, die Elemente anfassen, die erst nachgeladen werden. Nach spätestens 5 Sekunden läuft es in jedem Fall. |
+| natychmiast po wyrenderowaniu | Ustawienie domyślne. Skrypt uruchamia się, gdy tylko pojawi się widget. Odpowiednie dla wszystkiego, co nie wymaga innych elementów strony. |
+| po zakończeniu ładowania strony | Skrypt czeka, aż zawartość strony przestanie się zmieniać — dla skryptów, które modyfikują elementy ładowane później. W każdym przypadku uruchamia się najpóźniej po 5 sekundach. |
 
-Das CSS gilt in beiden Fällen sofort — früh angewandt kann es nur verhindern,
-dass die Seite kurz ungestylt aufblitzt.
+CSS obowiązuje w obu przypadkach natychmiast. Jest to zamierzone: dzięki temu strona
+nie pojawia się na chwilę bez stylizacji.
 
-Der Editor prüft die Syntax beim Tippen: Fehler werden im Text markiert und
-unter dem Editor im Klartext genannt, blockieren das Speichern aber nicht. Der
-Knopf **Formatieren** rückt den Code automatisch per Prettier ein.
+## Pomoc w edytorze
 
-Wer eine JavaScript-Funktion zurückgibt, bekommt sie beim Entfernen des
-Widgets zum Aufräumen aufgerufen — der Weg, um Timer oder Event-Listener
-wieder loszuwerden:
-
-```js
-const timer = setInterval(() => console.log("tick"), 1000);
-return () => clearInterval(timer);
-```
-
-Fehler im Code landen in der Browser-Konsole und werden abgefangen: ein
-Tippfehler darf die Seite nicht lahmlegen.
-</style>
+| Funkcja | Opis |
+| --- | --- |
+| Sprawdzanie składni | Działa podczas pisania. Pod edytorem pojawia się komunikat „Nie znaleziono błędów składniowych” lub wskazanie miejsca błędu wraz z numerem linii. Nie **blokuje to zapisywania**. W przypadku CSS sprawdzana jest tylko struktura nawiasów, a nie każda właściwość. |
+| Formatowanie | Automatycznie wyrównuje kod. |

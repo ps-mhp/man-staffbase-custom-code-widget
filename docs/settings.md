@@ -1,34 +1,29 @@
 # Einstellungen
 
-Der Konfigurationsdialog öffnet ein Modal mit zwei Reitern:
+Der Konfigurationsdialog zeigt ein Feld **Code**, das nie von Hand bearbeitet
+wird. Gearbeitet wird im Code-Editor darüber; der Button **Code bearbeiten**
+öffnet ihn erneut, **Fertig** übernimmt den Stand in das Feld.
+
+## Reiter im Code-Editor
 
 | Reiter | Beschreibung |
 | --- | --- |
-| CSS | Wird als `<style>` global in die Seite eingefügt und gilt für die ganze Seite, nicht nur für den Widget-Container. |
-| JavaScript | Läuft als Funktionskörper mit Zugriff auf `container` (das Widget-Element) und `widgetApi`. |
+| CSS | Wird als Stylesheet in die Seite eingefügt und gilt für die **ganze Seite**, nicht nur für den Widget-Bereich. Wird das Widget entfernt, verschwindet auch das CSS wieder. |
+| JavaScript | Läuft mit Zugriff auf `container` (das Widget-Element) und `widgetApi` (die Staffbase-Schnittstelle). |
 
-Zusätzlich lässt sich im JavaScript-Reiter der **Startzeitpunkt** wählen:
+## Startzeitpunkt („Ausführen:“, nur im Reiter JavaScript)
 
 | Wert | Bedeutung |
 | --- | --- |
-| Sofort beim Rendern (Voreinstellung) | Das Skript läuft, sobald das Widget gerendert wird. |
-| Wenn die Seite fertig geladen ist | Das Skript wartet, bis sich am Seiteninhalt nichts mehr ändert — gedacht für Skripte, die Elemente anfassen, die erst nachgeladen werden. Nach spätestens 5 Sekunden läuft es in jedem Fall. |
+| sofort beim Rendern | Voreinstellung. Das Skript startet, sobald das Widget erscheint. Richtig für alles, was keine anderen Seitenelemente braucht. |
+| wenn die Seite fertig geladen ist | Das Skript wartet, bis sich am Seiteninhalt nichts mehr ändert — für Skripte, die Elemente anfassen, die erst nachgeladen werden. Spätestens nach 5 Sekunden startet es in jedem Fall. |
 
-Das CSS gilt in beiden Fällen sofort — früh angewandt kann es nur verhindern,
-dass die Seite kurz ungestylt aufblitzt.
+Das CSS gilt in beiden Fällen sofort. Das ist gewollt: So blitzt die Seite
+nicht kurz ungestylt auf.
 
-Der Editor prüft die Syntax beim Tippen: Fehler werden im Text markiert und
-unter dem Editor im Klartext genannt, blockieren das Speichern aber nicht. Der
-Knopf **Formatieren** rückt den Code automatisch per Prettier ein.
+## Hilfen im Editor
 
-Wer eine JavaScript-Funktion zurückgibt, bekommt sie beim Entfernen des
-Widgets zum Aufräumen aufgerufen — der Weg, um Timer oder Event-Listener
-wieder loszuwerden:
-
-```js
-const timer = setInterval(() => console.log("tick"), 1000);
-return () => clearInterval(timer);
-```
-
-Fehler im Code landen in der Browser-Konsole und werden abgefangen: ein
-Tippfehler darf die Seite nicht lahmlegen.
+| Funktion | Beschreibung |
+| --- | --- |
+| Syntaxprüfung | Läuft beim Tippen. Unter dem Editor steht „Keine Syntaxfehler gefunden“ oder die Fehlerstelle mit Zeilennummer. Sie **blockiert das Speichern nicht**. Bei CSS wird nur die Klammerstruktur geprüft, nicht jede Eigenschaft. |
+| Formatieren | Rückt den Code automatisch sauber ein. |

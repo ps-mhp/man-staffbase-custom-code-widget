@@ -1,11 +1,16 @@
 {
   "title": "Custom Code",
-  "summary": "Embed your own CSS and JavaScript for the entire page.",
+  "summary": "Stores custom CSS and JavaScript for the entire page—invisibly, for cases where the CMS's built-in tools aren't available.",
   "pages": [
     {
       "id": "overview",
       "title": "Overview",
       "file": "overview.md"
+    },
+    {
+      "id": "usage",
+      "title": "Step by step",
+      "file": "usage.md"
     },
     {
       "id": "settings",

@@ -1,11 +1,16 @@
 {
   "title": "Code personnalisé",
-  "summary": "Intègre vos propres fichiers CSS et JavaScript pour l'ensemble de la page.",
+  "summary": "Enregistre son propre CSS et JavaScript pour l'ensemble de la page — de manière invisible, pour les cas où les outils intégrés au CMS ne sont pas disponibles.",
   "pages": [
     {
       "id": "overview",
       "title": "Aperçu",
       "file": "overview.md"
+    },
+    {
+      "id": "usage",
+      "title": "Étape par étape",
+      "file": "usage.md"
     },
     {
       "id": "settings",

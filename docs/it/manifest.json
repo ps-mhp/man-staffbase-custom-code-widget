@@ -1,11 +1,16 @@
 {
   "title": "Codice personalizzato",
-  "summary": "Incorpora i propri file CSS e JavaScript per l'intera pagina.",
+  "summary": "Inserisce CSS e JavaScript personalizzati per l'intera pagina — in modo invisibile, nei casi in cui non siano disponibili strumenti integrati nel CMS.",
   "pages": [
     {
       "id": "overview",
       "title": "Panoramica",
       "file": "overview.md"
+    },
+    {
+      "id": "usage",
+      "title": "Passo dopo passo",
+      "file": "usage.md"
     },
     {
       "id": "settings",

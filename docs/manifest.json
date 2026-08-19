@@ -1,11 +1,16 @@
 {
   "title": "Custom-Code",
-  "summary": "Bettet eigenes CSS und JavaScript für die ganze Seite ein.",
+  "summary": "Hinterlegt eigenes CSS und JavaScript für die ganze Seite — unsichtbar, für Fälle ohne CMS-Bordmittel.",
   "pages": [
     {
       "id": "overview",
       "title": "Übersicht",
       "file": "overview.md"
+    },
+    {
+      "id": "usage",
+      "title": "Schritt für Schritt",
+      "file": "usage.md"
     },
     {
       "id": "settings",
