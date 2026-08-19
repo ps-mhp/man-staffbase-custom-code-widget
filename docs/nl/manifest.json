@@ -1,0 +1,22 @@
+{
+  "title": "Aangepaste code",
+  "summary": "Integreer eigen CSS en JavaScript voor de hele pagina.",
+  "icon": "🧑‍💻",
+  "pages": [
+    {
+      "id": "overview",
+      "title": "Overzicht",
+      "file": "overview.md"
+    },
+    {
+      "id": "settings",
+      "title": "Instellingen",
+      "file": "settings.md"
+    },
+    {
+      "id": "faq",
+      "title": "Veelgestelde vragen",
+      "file": "faq.md"
+    }
+  ]
+}

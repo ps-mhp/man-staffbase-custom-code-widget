@@ -1,0 +1,22 @@
+{
+  "title": "Código personalizado",
+  "summary": "Incorpora tu propio CSS y JavaScript para toda la página.",
+  "icon": "🧑‍💻",
+  "pages": [
+    {
+      "id": "overview",
+      "title": "Resumen",
+      "file": "overview.md"
+    },
+    {
+      "id": "settings",
+      "title": "Configuración",
+      "file": "settings.md"
+    },
+    {
+      "id": "faq",
+      "title": "Preguntas frecuentes",
+      "file": "faq.md"
+    }
+  ]
+}
