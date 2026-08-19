@@ -1,0 +1,10 @@
+{
+  "title": "Custom-Code",
+  "summary": "Bettet eigenes CSS und JavaScript für die ganze Seite ein.",
+  "icon": "🧑‍💻",
+  "pages": [
+    { "id": "overview", "title": "Übersicht", "file": "overview.md" },
+    { "id": "settings", "title": "Einstellungen", "file": "settings.md" },
+    { "id": "faq", "title": "FAQ", "file": "faq.md" }
+  ]
+}
