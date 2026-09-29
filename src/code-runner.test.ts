@@ -31,6 +31,26 @@ describe("runCustomCode", () => {
     expect(styles()).toHaveLength(0);
   });
 
+  // The Content Designer renders the page body into a shadow root: CSS in the
+  // head alone would reach the app's shell but none of the page's content.
+  it("also puts the CSS into the shadow root the widget renders in", () => {
+    const host = document.body.appendChild(document.createElement("div"));
+    const shadow = host.attachShadow({ mode: "open" });
+    const container = shadow.appendChild(document.createElement("div"));
+
+    const handle = runCustomCode(code({ css: "p { color: red; }", js: "" }), { container, widgetApi: {} }, "one");
+
+    const inShadow = shadow.querySelectorAll(`style[${STYLE_MARKER}="one"]`);
+    expect(inShadow).toHaveLength(1);
+    expect(inShadow[0].textContent).toBe("p { color: red; }");
+    expect(styles()).toHaveLength(1);
+
+    handle.stop();
+    expect(shadow.querySelectorAll(`style[${STYLE_MARKER}]`)).toHaveLength(0);
+    expect(styles()).toHaveLength(0);
+    host.remove();
+  });
+
   it("adds no style element for empty CSS", () => {
     runCustomCode(code({ css: "   ", js: "" }), ctx(), "one");
 

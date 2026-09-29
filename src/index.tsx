@@ -11,6 +11,7 @@
  * limitations under the License.
  */
 
+import { whenConfigFieldAppears } from "@shared/config-field-watch";
 import { startWidget } from "@shared/dev-mode/start-widget";
 import { setPublicPathFromBundle } from "@shared/public-path";
 
@@ -145,6 +146,18 @@ if (typeof window.defineBlock === "function") {
   void startWidget({
     name: "custom-code-widget",
     version: pkg.version,
-    register: () => window.defineBlock(externalBlockDefinition),
+    register: () => {
+      // The editor is loaded once its field shows up, not from
+      // `renderBlockInEditor`: the Content Designer draws its own placeholder
+      // for the block and never calls it, so a dialog opened there found no
+      // editor and showed the raw textarea. Watching costs a published page
+      // one observer and no React — the chunk is only fetched for the dialog.
+      // Started here rather than at module load for the same reason as in
+      // `table-widget`: the editor belongs to whoever registers.
+      whenConfigFieldAppears(CODE_ATTRIBUTE, () => {
+        void editorView().then((view) => view?.ensureInjector());
+      });
+      window.defineBlock(externalBlockDefinition);
+    },
   });
 }

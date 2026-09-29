@@ -80,6 +80,32 @@ describe("the block definition", () => {
   });
 });
 
+describe("the configuration dialog", () => {
+  // The Content Designer shows its own placeholder for the block and never
+  // calls `renderBlockInEditor`; the editor still has to appear.
+  it("gets the code editor without the block having been rendered", async () => {
+    const field = document.createElement("textarea");
+    field.id = "root_code";
+    await act(async () => {
+      document.body.appendChild(field);
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[data-testid="code-editor-modal"]')).not.toBeNull();
+    });
+    expect(field.style.display).toBe("none");
+
+    await act(async () => {
+      (document.body.querySelector('[data-testid="code-tabs-done"]') as HTMLButtonElement).click();
+    });
+    await act(async () => {
+      field.remove();
+      await Promise.resolve();
+    });
+  });
+});
+
 describe("renderBlock", () => {
   it("runs the code and hides the container", () => {
     const block = newBlock();
@@ -150,8 +176,8 @@ describe("renderBlockInEditor", () => {
   });
 
   it("starts watching for the configuration dialog", async () => {
-    // The editing view is the only place the dialog can appear, so it is also
-    // where the watcher is started — a published page pays nothing for it.
+    // The classic editor renders the block before its dialog can open; that
+    // path has to keep working next to the field watcher.
     const block = newBlock();
     block.setAttributes(withCode("", ""));
     const container = document.createElement("div");

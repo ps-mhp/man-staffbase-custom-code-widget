@@ -53,15 +53,31 @@ const report = (what: string, error: unknown): void => {
   console.error(`${LOG_PREFIX} ${what}`, error);
 };
 
-function applyCss(css: string, instanceId: string): () => void {
+/**
+ * Puts the CSS into the head and, where the widget sits in one, into its
+ * shadow root as well.
+ *
+ * The Content Designer renders the page body into a shadow root, which no rule
+ * in the head crosses — and the shell around it (header, navigation) is
+ * outside that root, where no rule inside it reaches. An author writing
+ * "custom CSS" means both, so it goes to both.
+ */
+function applyCss(css: string, instanceId: string, container: HTMLElement): () => void {
   if (css.trim() === "") return () => {};
 
-  const style = document.createElement("style");
-  style.setAttribute(STYLE_MARKER, instanceId);
-  style.textContent = css;
-  document.head.appendChild(style);
+  const targets: Node[] = [document.head];
+  const root = container.getRootNode();
+  if (root instanceof ShadowRoot) targets.push(root);
 
-  return () => style.remove();
+  const styles = targets.map((target) => {
+    const style = document.createElement("style");
+    style.setAttribute(STYLE_MARKER, instanceId);
+    style.textContent = css;
+    target.appendChild(style);
+    return style;
+  });
+
+  return () => styles.forEach((style) => style.remove());
 }
 
 function runJs(js: string, ctx: RunnerContext): () => void {
@@ -114,7 +130,7 @@ function runJs(js: string, ctx: RunnerContext): () => void {
  * `stop` more than once is harmless.
  */
 export function runCustomCode(code: CustomCode, ctx: RunnerContext, instanceId: string): RunHandle {
-  const removeCss = applyCss(code.css, instanceId);
+  const removeCss = applyCss(code.css, instanceId, ctx.container);
 
   let stopJs: (() => void) | null = null;
   let cancelWait: (() => void) | null = null;
