@@ -1,12 +1,24 @@
 import React from "react";
 import { render, act, waitFor } from "@testing-library/react";
+import { EditorView } from "@codemirror/view";
 import Form from "@rjsf/mui";
 import validator from "@rjsf/validator-ajv8";
-import userEvent from "@testing-library/user-event";
 
 import { startCodeEditorInjector } from "./code-editor-injector";
 import { configurationSchema, uiSchema } from "./configuration-schema";
 import { encodeCustomCode, parseCustomCode } from "./custom-code";
+import { queryDeep, queryInModal } from "@shared/ui/config-modal.testing";
+
+// jsdom reports `navigator.vendor` "Apple Computer, Inc.", so CodeMirror
+// treats it as Safari and, inside a shadow root, reads the selection through
+// `document.execCommand("indent")` — which jsdom does not implement.
+const hadExecCommand = "execCommand" in document;
+beforeAll(() => {
+  if (!hadExecCommand) Object.defineProperty(document, "execCommand", { configurable: true, value: () => false });
+});
+afterAll(() => {
+  if (!hadExecCommand) delete (document as Partial<Document>).execCommand;
+});
 
 async function inject(formData?: Record<string, unknown>): Promise<{
   container: HTMLElement;
@@ -24,7 +36,7 @@ async function inject(formData?: Record<string, unknown>): Promise<{
   });
 
   await waitFor(() => {
-    expect(document.body.querySelector('[data-testid="code-editor-css-host"]')).not.toBeNull();
+    expect(queryInModal('[data-testid="code-editor-css-host"]')).not.toBeNull();
   });
 
   return { container, stop, onSubmit };
@@ -35,8 +47,8 @@ describe("startCodeEditorInjector", () => {
     const { container, stop } = await inject();
 
     expect(container.querySelector<HTMLTextAreaElement>("#root_code")!.style.display).toBe("none");
-    expect(document.body.querySelector('[data-testid="code-editor-modal"]')).not.toBeNull();
-    expect(document.body.querySelector('[data-testid="code-tabs"]')).not.toBeNull();
+    expect(queryInModal('[data-testid="code-editor-modal"]')).not.toBeNull();
+    expect(queryInModal('[data-testid="code-tabs"]')).not.toBeNull();
 
     await act(async () => stop());
   });
@@ -45,8 +57,8 @@ describe("startCodeEditorInjector", () => {
     const stored = encodeCustomCode({ css: "body { color: red; }", js: "const a = 1;", timing: "immediate" });
     const { stop } = await inject({ code: stored });
 
-    expect(document.body.querySelector('[data-testid="code-editor-css"]')).toHaveTextContent("body { color: red; }");
-    expect(document.body.querySelector('[data-testid="code-editor-js"]')).toHaveTextContent("const a = 1;");
+    expect(queryInModal('[data-testid="code-editor-css"]')).toHaveTextContent("body { color: red; }");
+    expect(queryInModal('[data-testid="code-editor-js"]')).toHaveTextContent("const a = 1;");
 
     await act(async () => stop());
   });
@@ -54,15 +66,17 @@ describe("startCodeEditorInjector", () => {
   it("writes saved edits back into the field encoded, so RJSF submits them", async () => {
     const { container, stop, onSubmit } = await inject({ code: encodeCustomCode({ css: "a{}", js: "", timing: "immediate" }) });
 
-    const editable = document.body.querySelector<HTMLElement>('[data-testid="code-editor-css-host"] [contenteditable]')!;
+    const editable = queryInModal<HTMLElement>('[data-testid="code-editor-css-host"] [contenteditable]')!;
+    // Through the editor view rather than simulated typing: in jsdom's shadow
+    // root CodeMirror has no selection to map typed DOM changes onto.
     await act(async () => {
-      editable.focus();
-      await userEvent.type(editable, "b");
+      const view = EditorView.findFromDOM(editable)!;
+      view.dispatch({ changes: { from: view.state.doc.length, insert: "b" } });
     });
 
     // Edits stay in the modal's draft until they are saved.
     await act(async () => {
-      (document.body.querySelector('[data-testid="code-tabs-done"]') as HTMLButtonElement).click();
+      (queryInModal('[data-testid="code-tabs-done"]') as HTMLButtonElement).click();
     });
 
     await act(async () => {
@@ -80,15 +94,15 @@ describe("startCodeEditorInjector", () => {
     const { container, stop } = await inject();
 
     await act(async () => {
-      (document.body.querySelector('[data-testid="code-tabs-done"]') as HTMLButtonElement).click();
+      (queryInModal('[data-testid="code-tabs-done"]') as HTMLButtonElement).click();
     });
-    expect(document.body.querySelector('[data-testid="code-editor-modal"]')).toBeNull();
+    expect(queryInModal('[data-testid="code-editor-modal"]')).toBeNull();
 
-    const reopen = container.querySelector<HTMLButtonElement>('[data-testid="code-editor-reopen"]')!;
+    const reopen = queryDeep<HTMLButtonElement>(container, '[data-testid="code-editor-reopen"]')!;
     expect(reopen).toHaveTextContent("Code bearbeiten");
 
     await act(async () => reopen.click());
-    expect(document.body.querySelector('[data-testid="code-editor-modal"]')).not.toBeNull();
+    expect(queryInModal('[data-testid="code-editor-modal"]')).not.toBeNull();
 
     await act(async () => stop());
   });

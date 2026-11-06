@@ -17,6 +17,18 @@ import type { BaseBlock, ExternalBlockDefinition } from "widget-sdk";
 import { CODE_ATTRIBUTE } from "./attributes";
 import { encodeCustomCode, RunTiming } from "./custom-code";
 import { STYLE_MARKER } from "./code-runner";
+import { queryInModal } from "@shared/ui/config-modal.testing";
+
+// jsdom reports `navigator.vendor` "Apple Computer, Inc.", so CodeMirror
+// treats it as Safari and, inside a shadow root, reads the selection through
+// `document.execCommand("indent")` — which jsdom does not implement.
+const hadExecCommand = "execCommand" in document;
+beforeAll(() => {
+  if (!hadExecCommand) Object.defineProperty(document, "execCommand", { configurable: true, value: () => false });
+});
+afterAll(() => {
+  if (!hadExecCommand) delete (document as Partial<Document>).execCommand;
+});
 
 /**
  * The block class as the host builds it.
@@ -92,12 +104,12 @@ describe("the configuration dialog", () => {
     });
 
     await waitFor(() => {
-      expect(document.body.querySelector('[data-testid="code-editor-modal"]')).not.toBeNull();
+      expect(queryInModal('[data-testid="code-editor-modal"]')).not.toBeNull();
     });
     expect(field.style.display).toBe("none");
 
     await act(async () => {
-      (document.body.querySelector('[data-testid="code-tabs-done"]') as HTMLButtonElement).click();
+      (queryInModal('[data-testid="code-tabs-done"]') as HTMLButtonElement).click();
     });
     await act(async () => {
       field.remove();
@@ -195,12 +207,12 @@ describe("renderBlockInEditor", () => {
     });
 
     await waitFor(() => {
-      expect(document.body.querySelector('[data-testid="code-editor-modal"]')).not.toBeNull();
+      expect(queryInModal('[data-testid="code-editor-modal"]')).not.toBeNull();
     });
     expect(field.style.display).toBe("none");
 
     await act(async () => {
-      (document.body.querySelector('[data-testid="code-tabs-done"]') as HTMLButtonElement).click();
+      (queryInModal('[data-testid="code-tabs-done"]') as HTMLButtonElement).click();
     });
     field.remove();
     await act(async () => block.unmountBlock(container));
