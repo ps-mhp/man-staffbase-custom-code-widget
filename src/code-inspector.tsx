@@ -24,6 +24,7 @@
 import * as React from "react";
 import { Check, TriangleAlert } from "lucide-react";
 import { FormSection } from "@man/config-ui/form/form-section";
+import { Note } from "@man/config-ui/form/note";
 import { InspectorPanel } from "@man/config-ui/inspector/inspector-panel";
 import { Button } from "@man/config-ui/primitives/button";
 import { cn } from "@man/config-ui/primitives/utils";
@@ -97,12 +98,7 @@ export function CodeInspector({ value, onChange, problems, onReveal }: CodeInspe
               Zur Fehlerstelle
             </Button>
           )}
-          <p
-            data-testid="code-check-note"
-            className="rounded-md bg-secondary px-3.5 py-3 text-[13px] leading-normal text-muted-foreground"
-          >
-            {checkNote(problems)}
-          </p>
+          <Note data-testid="code-check-note">{checkNote(problems)}</Note>
         </FormSection>
       </div>
     </InspectorPanel>
