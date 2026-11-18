@@ -36,11 +36,11 @@ darf die Seite nicht abräumen.
 
 ## Wann das Skript startet
 
-Im JavaScript-Reiter steht eine Auswahl:
+Im Panel **Code** rechts im Editor steht unter **Ausführen** eine Wahl:
 
-- **sofort beim Rendern** (Voreinstellung) — das Skript läuft, sobald das
+- **Sofort beim Rendern** (Voreinstellung) — das Skript läuft, sobald das
   Widget gerendert wird.
-- **wenn die Seite fertig geladen ist** — das Skript wartet auf `load` und
+- **Wenn die Seite fertig geladen ist** — das Skript wartet auf `load` und
   danach auf eine Ruhephase, in der sich am Seiteninhalt nichts mehr ändert.
 
 Die zweite Einstellung ist für Skripte gedacht, die Elemente anfassen, die
@@ -62,20 +62,38 @@ zerlegen, in der man es korrigieren müsste.
 
 ## Der Editor
 
-Der Konfigurationsdialog öffnet ein Modal mit zwei Reitern, CSS und
-JavaScript, darin ein CodeMirror-Editor mit Syntaxprüfung. Fehler werden im
-Text markiert und unter dem Editor im Klartext genannt; sie blockieren das
-Speichern nicht. Lange Zeilen scrollen waagerecht, statt das Modal zu
-verbreitern.
+Der Konfigurationsdialog öffnet den Editor im Vollbild-Rahmen aller
+MAN-Widgets (`@man/config-ui`): oben der Kopf mit Status, **Rückgängig**,
+**Hilfe**, **Abbrechen** und **Übernehmen**, darunter links die Codefläche,
+rechts das Panel **Code**. Eine Vorschau gibt es nicht — der Code läuft nur
+auf der Seite.
 
-Der Knopf **Formatieren** rückt den Code per Prettier ein. Lässt er sich nicht
-parsen, bleibt der Text unverändert und die Meldung des Parsers steht unter
-dem Editor.
+- **Reiter CSS · JavaScript** über der Codefläche, je ein CodeMirror-Editor.
+  Beide bleiben beim Wechsel erhalten, mit Schreibmarke und eigenem Verlauf.
+  Rechts daneben **Formatieren**.
+- **Codefläche** mit Zeilennummern, hervorgehobener aktueller Zeile und
+  Syntaxprüfung. Eine Fehlerzeile ist rot hinterlegt, die Meldung steht direkt
+  darunter; am Reiter zählt eine rote Marke die Fehler. Lange Zeilen scrollen
+  waagerecht, statt das Modal zu verbreitern.
+- **Statuszeile** unter dem Code: Sprache, Zeilenzahl, Fehler und die
+  Position der Schreibmarke.
+- **Panel Code**: der Startzeitpunkt als Wahlkarten, darunter **Prüfung** mit
+  einer Zeile je Sprache, **Zur Fehlerstelle** und einem Hinweis, was
+  „Übernehmen“ bewirkt.
+
+Fehler blockieren das Übernehmen nicht: fehlerhaftes JavaScript läuft auf der
+Seite einfach nicht, CSS wendet der Browser an, so weit er es lesen kann.
+Öffnen und Übernehmen ohne Änderung schreibt nichts in den Block.
+
+**Formatieren** rückt den Code der gewählten Sprache per Prettier ein. Lässt
+er sich nicht parsen, bleibt der Text unverändert und die Statuszeile nennt
+den Grund. ⌘/Strg ↵ im Code übernimmt und schließt wie überall im Rahmen.
 
 CodeMirror liegt in einem eigenen Chunk und wird erst beim Öffnen des Modals
-geladen, Prettier in einem weiteren erst beim ersten Druck auf den Knopf. Auch
-React kommt nur in der Bearbeitungsansicht dazu: das Bundle, das ein Leser der
-Seite lädt, enthält nichts davon.
+geladen, Prettier in einem weiteren erst beim ersten Druck auf den Knopf, der
+Arbeitsbereich mit `@man/config-ui` per `React.lazy`. Auch React kommt nur in
+der Bearbeitungsansicht dazu: das Bundle, das ein Leser der Seite lädt,
+enthält nichts davon.
 
 ## Reichweite
 

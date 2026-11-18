@@ -15,20 +15,20 @@ den Code im Code-Editor eintragen.
 
 **Frage:** Mein Skript soll ein Element anfassen, das noch gar nicht da ist.
 
-Antwort: Im Reiter JavaScript bei **Ausführen:** auf „wenn die Seite fertig
-geladen ist“ umstellen. Dann wartet das Skript, bis der Seiteninhalt zur Ruhe
+Antwort: Im Panel **Code** rechts unter **Ausführen** „Wenn die Seite fertig
+geladen ist“ wählen. Dann wartet das Skript, bis der Seiteninhalt zur Ruhe
 gekommen ist.
 
 **Frage:** Mein CSS oder JavaScript wirkt nicht.
 
 Antwort: Der Reihe nach prüfen: Wurde in der **Vorschau** getestet und nicht
-im Editor? Steht unter dem Editor eine Fehlermeldung? Wurde nach **Fertig**
-auch die Widget-Einstellung gespeichert? Bei JavaScript zusätzlich die
+im Editor? Meldet das Panel **Prüfung** einen Fehler? Wurde nach
+**Übernehmen** auch die Widget-Einstellung gespeichert? Bei JavaScript zusätzlich die
 Browser-Konsole der veröffentlichten Seite öffnen — dort stehen Meldungen wie
 „Das JavaScript hat einen Syntaxfehler und wurde nicht ausgeführt“ oder „Das
 JavaScript ist beim Ausführen gescheitert“.
 
-**Frage:** Ein Syntaxfehler wird angezeigt — kann ich trotzdem speichern?
+**Frage:** Ein Syntaxfehler wird angezeigt — kann ich trotzdem übernehmen?
 
 Antwort: Ja, die Prüfung blockiert nichts. Sie ist ein Hinweis, keine Sperre.
 Fehlerhaftes JavaScript wird auf der Seite aber gar nicht erst ausgeführt.
