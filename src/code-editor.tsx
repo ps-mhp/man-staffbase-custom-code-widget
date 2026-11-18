@@ -14,158 +14,69 @@
 import * as React from "react";
 
 import type { EditorView } from "@codemirror/view";
-import { loadCodeMirror, CodeMirrorBundle, Language } from "./code-mirror";
-import { formatCode } from "./format-code";
-import { checkSyntax, formatProblem } from "./syntax-check";
+import { Textarea } from "@man/config-ui/primitives/textarea";
+
+import { loadCodeMirror, CodeMirrorBundle, Language, ProblemMark } from "./code-mirror";
+import { CursorPosition, minimalReplacement } from "./code-status";
+
+/** Was der Arbeitsbereich mit einem Editor tun kann. */
+export interface CodeEditorHandle {
+  /**
+   * Setzt die Schreibmarke an den Anfang von `line` (1-basiert), holt die
+   * Zeile ins Bild und gibt dem Editor den Fokus – „Zur Fehlerstelle“.
+   * Ohne Zeile nur den Fokus.
+   */
+  revealLine: (line: number | undefined) => void;
+}
 
 export interface CodeEditorProps {
   language: Language;
   value: string;
   onChange: (value: string) => void;
+  /** Die Fehlerstelle, deren Meldung unter ihrer Zeile steht. */
+  problem?: ProblemMark | null;
+  /** Meldet, wo die Schreibmarke steht – für die Statuszeile. */
+  onCursor?: (position: CursorPosition) => void;
+  /**
+   * Meldet die Zeile der ersten Markierung des Parsers. Die Engine nennt für
+   * einen Syntaxfehler oft keine Zeile; dann gilt diese.
+   */
+  onParsedErrorLine?: (line: number | undefined) => void;
+  /** ⌘/Strg ↵ im Editor: im Rahmen „Übernehmen und schließen“. */
+  onSubmitShortcut?: () => void;
   /** Identifies the editor in tests. */
   testId?: string;
+  ref?: React.Ref<CodeEditorHandle>;
 }
 
-const wrapperStyle: React.CSSProperties = {
-  flex: 1,
-  minHeight: 0,
-  // Without this a long line makes the editor wider than the modal instead of
-  // scrollable inside it: a flex item's automatic minimum size is its content.
-  minWidth: 0,
-  display: "flex",
-  flexDirection: "column",
-  border: "1px solid #d5d9de",
-  borderRadius: "4px",
-  overflow: "hidden",
-};
+const LABELS: Record<Language, string> = { css: "CSS-Code", js: "JavaScript-Code" };
 
-const hostStyle: React.CSSProperties = {
-  flex: 1,
-  minHeight: 0,
-  minWidth: 0,
-  // Vertically the host scrolls, horizontally CodeMirror's own scroller does —
-  // letting both scroll sideways would produce two scrollbars for one axis.
-  overflowY: "auto",
-  overflowX: "hidden",
-  fontSize: "13px",
-};
+/** 1-basierte Zeile und Spalte einer Stelle im Text. */
+function positionIn(text: string, offset: number): CursorPosition {
+  const before = text.slice(0, offset).split("\n");
+  return { line: before.length, column: before[before.length - 1].length + 1 };
+}
 
-const fallbackStyle: React.CSSProperties = {
-  flex: 1,
-  minHeight: 0,
-  minWidth: 0,
-  width: "100%",
-  border: "none",
-  padding: "8px",
-  fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-  fontSize: "13px",
-  boxSizing: "border-box",
-  resize: "none",
-  // Code is read by its indentation; wrapping long lines would destroy it.
-  whiteSpace: "pre",
-  overflowWrap: "normal",
-  overflowX: "auto",
-};
+/** Der Anfang von `line` (1-basiert) im Text, am Ende geklemmt. */
+function offsetOfLine(text: string, line: number): number {
+  const lines = text.split("\n");
+  const index = Math.min(Math.max(line, 1), lines.length) - 1;
+  return lines.slice(0, index).reduce((sum, current) => sum + current.length + 1, 0);
+}
 
-const problemStyle: React.CSSProperties = {
-  padding: "6px 10px",
-  background: "#fdf1f0",
-  color: "#8c1c13",
-  borderTop: "1px solid #f0c4c0",
-  fontSize: "12px",
-  fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-  // An engine's message can be a single very long token; it wraps rather than
-  // widening the modal it sits in.
-  overflowWrap: "anywhere",
-};
+/** Der jüngste Wert einer Prop für Rückrufe, die CodeMirror einmal bekommt. */
+function useLatest<T>(value: T): React.RefObject<T> {
+  const ref = React.useRef(value);
+  React.useLayoutEffect(() => {
+    ref.current = value;
+  });
+  return ref;
+}
 
-const okStyle: React.CSSProperties = {
-  padding: "6px 10px",
-  background: "#f3f5f7",
-  color: "#5a6570",
-  borderTop: "1px solid #e2e6ea",
-  fontSize: "12px",
-};
-
-/** Holds the message and the button on one line, message first. */
-const statusRowStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: "10px",
-};
-
-const statusTextStyle: React.CSSProperties = {
-  flex: 1,
-  minWidth: 0,
-};
-
-const formatButtonStyle = (isBusy: boolean): React.CSSProperties => ({
-  flex: "none",
-  border: "1px solid #c3c9d0",
-  borderRadius: "4px",
-  background: "#fff",
-  color: "#3a4148",
-  cursor: isBusy ? "progress" : "pointer",
-  padding: "3px 10px",
-  fontSize: "12px",
-});
-
-/**
- * A CodeMirror editor for one language, with the first syntax problem spelled
- * out underneath.
- *
- * Uncontrolled towards CodeMirror: the editor owns its document once created,
- * and `value` is only the seed. Pushing every keystroke back in would fight
- * the editor for the cursor.
- *
- * Until the chunk has arrived — and in a browser where it fails to — a plain
- * textarea holds the same value. Losing highlighting is an inconvenience;
- * losing the ability to edit at all would make the widget unusable.
- */
-export function CodeEditor({ language, value, onChange, testId }: CodeEditorProps): React.ReactElement {
-  const hostRef = React.useRef<HTMLDivElement | null>(null);
-  const viewRef = React.useRef<EditorView | null>(null);
-  const onChangeRef = React.useRef(onChange);
-  onChangeRef.current = onChange;
-
+/** Lädt CodeMirror einmal; scheitert es, bleibt das Textfeld. */
+function useCodeMirror(): { bundle: CodeMirrorBundle | null; failed: boolean } {
   const [bundle, setBundle] = React.useState<CodeMirrorBundle | null>(null);
   const [failed, setFailed] = React.useState(false);
-  const [text, setText] = React.useState(value);
-  /** Line of the parser's first mark, used where the engine reports none. */
-  const [parsedErrorLine, setParsedErrorLine] = React.useState<number | undefined>(undefined);
-  const [isFormatting, setIsFormatting] = React.useState(false);
-  /** Why the last formatting attempt failed, shown instead of the syntax line. */
-  const [formatError, setFormatError] = React.useState<string | null>(null);
-
-  /**
-   * Replaces the whole document with `next`.
-   *
-   * Goes through a transaction rather than a fresh editor state, because a
-   * transaction is what CodeMirror can map the selection through — the cursor
-   * survives reformatting instead of jumping to the top. The update listener
-   * reports the change onwards, which is why `onChange` is called here only
-   * for the textarea fallback.
-   */
-  const replaceDocument = (next: string): void => {
-    const view = viewRef.current;
-    if (view) {
-      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: next } });
-      return;
-    }
-    setText(next);
-    onChangeRef.current(next);
-  };
-
-  const handleFormat = (): void => {
-    if (isFormatting) return;
-    setIsFormatting(true);
-    void formatCode(language, text).then((result) => {
-      setIsFormatting(false);
-      setFormatError(result.ok ? null : result.message);
-      if (result.ok) replaceDocument(result.code);
-    });
-  };
-
   React.useEffect(() => {
     let cancelled = false;
     loadCodeMirror().then(
@@ -181,11 +92,26 @@ export function CodeEditor({ language, value, onChange, testId }: CodeEditorProp
       cancelled = true;
     };
   }, []);
+  return { bundle, failed };
+}
 
-  // The seed is read through a ref so that a change of `value` from the
-  // outside does not tear the editor down and rebuild it mid-typing.
-  const seedRef = React.useRef(value);
+interface MountProps {
+  bundle: CodeMirrorBundle | null;
+  hostRef: React.RefObject<HTMLDivElement | null>;
+  viewRef: React.RefObject<EditorView | null>;
+  language: Language;
+  latest: React.RefObject<CodeEditorProps>;
+  /** Wahr, solange der Editor einen Wert von außen übernimmt – der geht nicht zurück. */
+  syncing: React.RefObject<boolean>;
+  /** Was der Editor gemeldet hat und als `value` noch zurückkommen wird. */
+  echoes: React.RefObject<string[]>;
+}
 
+/** Mehr unbestätigte Meldungen hält der Editor nicht; sie kommen sonst ohnehin zurück. */
+const MAX_ECHOES = 32;
+
+/** Baut den CodeMirror-Editor auf und wieder ab. */
+function useEditorView({ bundle, hostRef, viewRef, language, latest, syncing, echoes }: MountProps): void {
   React.useEffect(() => {
     const host = hostRef.current;
     if (!bundle || !host) return;
@@ -193,33 +119,33 @@ export function CodeEditor({ language, value, onChange, testId }: CodeEditorProp
     const view = new bundle.EditorView({
       parent: host,
       state: bundle.EditorState.create({
-        doc: seedRef.current,
+        doc: latest.current.value,
         extensions: [
+          bundle.shortcut("Mod-Enter", () => latest.current.onSubmitShortcut?.()),
           bundle.basicSetup,
           bundle.forLanguage(language),
           bundle.lintGutter(),
           bundle.linter((linted) => {
             const diagnostics = bundle.parseDiagnostics(language, linted);
-            setParsedErrorLine(
+            latest.current.onParsedErrorLine?.(
               diagnostics.length === 0 ? undefined : linted.state.doc.lineAt(diagnostics[0].from).number,
             );
             return diagnostics;
           }),
+          bundle.problemMarks,
+          bundle.editorTheme,
+          bundle.EditorView.contentAttributes.of({ "aria-label": LABELS[language] }),
           bundle.EditorView.updateListener.of((update) => {
-            if (!update.docChanged) return;
-            const next = update.state.doc.toString();
-            setText(next);
-            setFormatError(null);
-            onChangeRef.current(next);
-          }),
-          // CodeMirror measures itself against its host. Pinning it to the
-          // host's box is what turns a long line into a scroll instead of
-          // growth: `.cm-scroller` then has a width to scroll within, and
-          // `.cm-content` is allowed to be wider than it.
-          bundle.EditorView.theme({
-            "&": { height: "100%", maxWidth: "100%" },
-            ".cm-scroller": { overflow: "auto" },
-            ".cm-content": { minWidth: "max-content" },
+            if (update.docChanged || update.selectionSet) {
+              const head = update.state.selection.main.head;
+              const line = update.state.doc.lineAt(head);
+              latest.current.onCursor?.({ line: line.number, column: head - line.from + 1 });
+            }
+            if (update.docChanged && !syncing.current) {
+              const next = update.state.doc.toString();
+              echoes.current = [...echoes.current.slice(1 - MAX_ECHOES), next];
+              latest.current.onChange(next);
+            }
           }),
         ],
       }),
@@ -230,46 +156,133 @@ export function CodeEditor({ language, value, onChange, testId }: CodeEditorProp
       view.destroy();
       viewRef.current = null;
     };
-  }, [bundle, language]);
+  }, [bundle, language, hostRef, viewRef, latest, syncing, echoes]);
+}
 
-  const found = checkSyntax(language, text);
-  const problem = found === null ? null : { ...found, line: found.line ?? parsedErrorLine };
-  // A failed reformat has the more specific message of the two: it names the
-  // position the parser stopped at, where the syntax check only names the
-  // problem.
-  const message = formatError ?? (problem ? formatProblem(problem) : "Keine Syntaxfehler gefunden");
-  const isBad = formatError !== null || problem !== null;
+interface SyncProps {
+  viewRef: React.RefObject<EditorView | null>;
+  value: string;
+  syncing: React.RefObject<boolean>;
+  echoes: React.RefObject<string[]>;
+  bundle: CodeMirrorBundle | null;
+}
+
+/**
+ * Bringt einen Wert von außen in den Editor – Rückgängig im Kopf,
+ * Formatieren – als kleinste Ersetzung, damit die Schreibmarke bleibt.
+ *
+ * Ein Wert, den der Editor selbst gemeldet hat, ist keiner von außen, auch
+ * wenn er erst ankommt, nachdem schon weitergetippt wurde: React rendert
+ * nicht zwingend nach jedem Tastendruck. Ihn zu „übernehmen“, nähme die
+ * letzten Zeichen wieder heraus. Deshalb zählt der Editor mit, was er
+ * gemeldet hat, und lässt diese Werte bei ihrer Rückkehr stehen.
+ */
+function useValueSync({ viewRef, value, syncing, echoes, bundle }: SyncProps): void {
+  React.useLayoutEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+    const echo = echoes.current.indexOf(value);
+    if (echo !== -1) {
+      echoes.current = echoes.current.slice(echo + 1);
+      return;
+    }
+    echoes.current = [];
+    const change = minimalReplacement(view.state.doc.toString(), value);
+    if (change === null) return;
+    syncing.current = true;
+    try {
+      view.dispatch({ changes: change });
+    } finally {
+      syncing.current = false;
+    }
+  }, [viewRef, value, syncing, echoes, bundle]);
+}
+
+/** Schreibt die Fehlerstelle in den Editor; nach jeder Änderung neu, damit sie zur Zeile passt. */
+function useProblemMark(viewRef: React.RefObject<EditorView | null>, bundle: CodeMirrorBundle | null, problem: ProblemMark | null, value: string): void {
+  const line = problem?.line;
+  const message = problem?.message;
+  React.useEffect(() => {
+    const view = viewRef.current;
+    if (!bundle || !view) return;
+    bundle.setProblemMark(view, line === undefined || message === undefined ? null : { line, message });
+  }, [viewRef, bundle, line, message, value]);
+}
+
+/**
+ * Ein CodeMirror-Editor für eine Sprache, im Aussehen des Config-Modals.
+ *
+ * Gesteuert über `value`: was der Editor tippt, geht über `onChange` hinaus;
+ * was von außen kommt (Rückgängig im Kopf, Formatieren), kommt als kleinste
+ * Ersetzung herein. Der Editor selbst bleibt dabei bestehen – ein Neuaufbau
+ * je Tastendruck nähme ihm Schreibmarke und Verlauf.
+ *
+ * Bis der Chunk da ist – und in einem Browser, in dem er nicht kommt – hält
+ * ein schlichtes Textfeld denselben Wert. Ohne Hervorhebung zu arbeiten ist
+ * lästig; gar nicht arbeiten zu können machte das Widget unbrauchbar.
+ */
+export function CodeEditor(props: CodeEditorProps): React.ReactElement {
+  const { language, value, onChange, problem = null, onCursor, testId, ref } = props;
+  const hostRef = React.useRef<HTMLDivElement | null>(null);
+  const viewRef = React.useRef<EditorView | null>(null);
+  const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const syncing = React.useRef(false);
+  const echoes = React.useRef<string[]>([]);
+  const latest = useLatest(props);
+  const { bundle, failed } = useCodeMirror();
+  const hasView = bundle !== null && !failed;
+
+  useEditorView({ bundle: hasView ? bundle : null, hostRef, viewRef, language, latest, syncing, echoes });
+  useValueSync({ viewRef, value, syncing, echoes, bundle });
+  useProblemMark(viewRef, bundle, problem, value);
+
+  React.useImperativeHandle(
+    ref,
+    () => ({
+      revealLine: (line) => {
+        const view = viewRef.current;
+        if (view) {
+          if (line !== undefined) {
+            const target = view.state.doc.line(Math.min(Math.max(line, 1), view.state.doc.lines));
+            view.dispatch({ selection: { anchor: target.from }, scrollIntoView: true });
+          }
+          view.focus();
+          return;
+        }
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+        textarea.focus();
+        if (line !== undefined) {
+          const offset = offsetOfLine(textarea.value, line);
+          textarea.setSelectionRange(offset, offset);
+        }
+      },
+    }),
+    [],
+  );
+
+  const reportTextareaCursor = (textarea: HTMLTextAreaElement): void =>
+    onCursor?.(positionIn(textarea.value, textarea.selectionStart ?? 0));
 
   return (
-    <div style={wrapperStyle} data-testid={testId}>
-      {bundle && !failed ? (
-        <div ref={hostRef} style={hostStyle} data-testid={testId && `${testId}-host`} />
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-muted" data-testid={testId}>
+      {hasView ? (
+        // Vertikal und waagerecht scrollt CodeMirror selbst; die Hülle hält
+        // ihn nur auf die Fläche, damit eine lange Zeile scrollt statt das
+        // Modal zu verbreitern.
+        <div ref={hostRef} className="min-h-0 min-w-0 flex-1 overflow-hidden" data-testid={testId && `${testId}-host`} />
       ) : (
-        <textarea
-          style={fallbackStyle}
+        <Textarea
+          ref={textareaRef}
           spellCheck={false}
-          aria-label={language === "css" ? "CSS" : "JavaScript"}
-          value={text}
-          onChange={(event) => {
-            setText(event.target.value);
-            setFormatError(null);
-            onChange(event.target.value);
-          }}
+          aria-label={LABELS[language]}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          onSelect={(event) => reportTextareaCursor(event.currentTarget)}
+          // Code liest man an seiner Einrückung; umbrechen zerstörte sie.
+          className="min-h-0 flex-1 resize-none rounded-none border-0 bg-muted px-4 py-3 font-mono text-[13px] leading-[1.75] whitespace-pre shadow-none [overflow-wrap:normal] focus-visible:ring-inset"
         />
       )}
-      <div style={{ ...(isBad ? problemStyle : okStyle), ...statusRowStyle }} data-testid={testId && `${testId}-status`}>
-        <span style={statusTextStyle}>{message}</span>
-        <button
-          type="button"
-          data-testid={testId && `${testId}-format`}
-          style={formatButtonStyle(isFormatting)}
-          disabled={isFormatting}
-          title="Code einrücken und umbrechen (Prettier)"
-          onClick={handleFormat}
-        >
-          {isFormatting ? "Formatiere…" : "Formatieren"}
-        </button>
-      </div>
     </div>
   );
 }

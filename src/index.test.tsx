@@ -109,7 +109,7 @@ describe("the configuration dialog", () => {
     expect(field.style.display).toBe("none");
 
     await act(async () => {
-      (queryInModal('[data-testid="code-tabs-done"]') as HTMLButtonElement).click();
+      (queryInModal('[data-testid="config-shell-close"]') as HTMLButtonElement).click();
     });
     await act(async () => {
       field.remove();
@@ -212,7 +212,7 @@ describe("renderBlockInEditor", () => {
     expect(field.style.display).toBe("none");
 
     await act(async () => {
-      (queryInModal('[data-testid="code-tabs-done"]') as HTMLButtonElement).click();
+      (queryInModal('[data-testid="config-shell-close"]') as HTMLButtonElement).click();
     });
     field.remove();
     await act(async () => block.unmountBlock(container));

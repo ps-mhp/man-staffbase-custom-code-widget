@@ -31,6 +31,13 @@ import type { EditorView } from "@codemirror/view";
 
 export type Language = "css" | "js";
 
+/** Eine Fehlerstelle, wie sie unter ihrer Zeile im Editor steht. */
+export interface ProblemMark {
+  /** 1-basiert. */
+  line: number;
+  message: string;
+}
+
 export interface CodeMirrorBundle {
   EditorView: typeof import("@codemirror/view").EditorView;
   EditorState: typeof import("@codemirror/state").EditorState;
@@ -40,6 +47,20 @@ export interface CodeMirrorBundle {
   forLanguage: (language: Language) => Extension;
   /** Diagnostics the language's parser found, for the message under the editor. */
   parseDiagnostics: (language: Language, view: EditorView) => Diagnostic[];
+  /**
+   * Das Aussehen im Config-Modal: Flächen, Zeilennummern, aktuelle Zeile
+   * und Fokusring über die Theme-Variablen des Rahmens.
+   */
+  editorTheme: Extension;
+  /** Hält die Fehlerzeile samt Meldung darunter; gesetzt über {@link CodeMirrorBundle.setProblemMark}. */
+  problemMarks: Extension;
+  /** Zeigt `mark` als Fehlerzeile, oder keine bei `null`. */
+  setProblemMark: (view: EditorView, mark: ProblemMark | null) => void;
+  /**
+   * Eine Taste vor allen anderen des Editors, etwa ⌘/Strg ↵, das CodeMirror
+   * sonst als „Leerzeile einfügen“ nähme.
+   */
+  shortcut: (key: string, run: () => void) => Extension;
 }
 
 /** Loads CodeMirror and everything the two languages need. */

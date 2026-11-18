@@ -1,8 +1,8 @@
 import React from "react";
-import { render, screen, act, waitFor } from "@testing-library/react";
+import { render, screen, act, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { CodeEditor } from "./code-editor";
+import { CodeEditor, CodeEditorHandle } from "./code-editor";
 
 jest.mock("./code-mirror", () => ({
   loadCodeMirror: (): Promise<never> => Promise.reject(new Error("offline")),
@@ -23,16 +23,16 @@ describe("CodeEditor without CodeMirror", () => {
     render(<CodeEditor language="css" value="body {}" onChange={jest.fn()} testId="editor" />);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("CSS")).toBeInTheDocument();
+      expect(errorSpy).toHaveBeenCalled();
     });
-    expect(screen.getByLabelText("CSS")).toHaveValue("body {}");
+    expect(screen.getByLabelText("CSS-Code")).toHaveValue("body {}");
   });
 
   it("still reports changes from the fallback", async () => {
     const onChange = jest.fn();
     render(<CodeEditor language="js" value="" onChange={onChange} testId="editor" />);
 
-    const textarea = await screen.findByLabelText("JavaScript");
+    const textarea = await screen.findByLabelText("JavaScript-Code");
     await act(async () => {
       await userEvent.type(textarea, "1");
     });
@@ -40,45 +40,37 @@ describe("CodeEditor without CodeMirror", () => {
     expect(onChange).toHaveBeenLastCalledWith("1");
   });
 
-  it("still reports syntax problems from the fallback", async () => {
-    render(<CodeEditor language="css" value="body {" onChange={jest.fn()} testId="editor" />);
+  it("shows a value that changes from the outside, such as an undo in the header", async () => {
+    const { rerender } = render(<CodeEditor language="css" value="a {}" onChange={jest.fn()} />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId("editor-status")).toHaveTextContent("Zeile 1: Klammer wurde nicht geschlossen");
-    });
+    rerender(<CodeEditor language="css" value="b {}" onChange={jest.fn()} />);
+
+    expect(await screen.findByLabelText("CSS-Code")).toHaveValue("b {}");
   });
 
-  it("formats the document on demand and reports the result", async () => {
-    const onChange = jest.fn();
-    render(
-      <CodeEditor language="css" value="body{color:red;background:blue}" onChange={onChange} testId="editor" />,
-    );
+  it("reports where the cursor is", async () => {
+    const onCursor = jest.fn();
+    render(<CodeEditor language="css" value={"a {\n  color: red;\n}"} onChange={jest.fn()} onCursor={onCursor} />);
 
-    const button = await screen.findByTestId("editor-format");
+    const textarea = await screen.findByLabelText<HTMLTextAreaElement>("CSS-Code");
     await act(async () => {
-      button.click();
+      textarea.focus();
+      textarea.setSelectionRange(9, 9);
+      // React meldet `onSelect` nach Tasten und Klicks, nicht beim nativen `select`.
+      fireEvent.keyUp(textarea, { key: "ArrowRight" });
     });
 
-    const formatted = "body {\n  color: red;\n  background: blue;\n}\n";
-    await waitFor(() => {
-      expect(screen.getByLabelText("CSS")).toHaveValue(formatted);
-    });
-    expect(onChange).toHaveBeenLastCalledWith(formatted);
+    expect(onCursor).toHaveBeenLastCalledWith({ line: 2, column: 6 });
   });
 
-  it("explains why unparsable code could not be formatted, and leaves it untouched", async () => {
-    const onChange = jest.fn();
-    render(<CodeEditor language="js" value="const = ;" onChange={onChange} testId="editor" />);
+  it("jumps to a line on request", async () => {
+    const handle = React.createRef<CodeEditorHandle>();
+    render(<CodeEditor ref={handle} language="js" value={"a();\nb(;\nc();"} onChange={jest.fn()} />);
 
-    const button = await screen.findByTestId("editor-format");
-    await act(async () => {
-      button.click();
-    });
+    const textarea = await screen.findByLabelText<HTMLTextAreaElement>("JavaScript-Code");
+    act(() => handle.current!.revealLine(2));
 
-    await waitFor(() => {
-      expect(screen.getByTestId("editor-status")).not.toHaveTextContent("Keine Syntaxfehler gefunden");
-    });
-    expect(screen.getByLabelText("JavaScript")).toHaveValue("const = ;");
-    expect(onChange).not.toHaveBeenCalled();
+    expect(textarea).toHaveFocus();
+    expect(textarea.selectionStart).toBe(5);
   });
 });
