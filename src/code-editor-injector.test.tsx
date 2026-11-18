@@ -13,7 +13,7 @@ import validator from "@rjsf/validator-ajv8";
 import { customCodeShell, startCodeEditorInjector } from "./code-editor-injector";
 import { configurationSchema, uiSchema } from "./configuration-schema";
 import { CustomCode, encodeCustomCode, parseCustomCode } from "./custom-code";
-import { modalRoot, queryDeep, queryInModal, settleModal } from "@shared/ui/config-modal.testing";
+import { clickInModal, modalRoot, queryDeep, queryInModal, settleModal } from "@shared/ui/config-modal.testing";
 
 // jsdom reports `navigator.vendor` "Apple Computer, Inc.", so CodeMirror
 // treats it as Safari and, inside a shadow root, reads the selection through
@@ -60,12 +60,6 @@ async function typeIntoCss(text: string): Promise<EditorView> {
     view.dispatch({ changes: { from: view.state.doc.length, insert: text } });
   });
   return view;
-}
-
-async function clickInModal(testId: string): Promise<void> {
-  await act(async () => {
-    queryInModal<HTMLButtonElement>(`[data-testid="${testId}"]`)!.click();
-  });
 }
 
 describe("startCodeEditorInjector", () => {
@@ -117,7 +111,7 @@ describe("startCodeEditorInjector", () => {
     await typeIntoCss("b");
     // Edits stay in the modal's draft until they are applied.
     expect(parseCustomCode(field(container).value).css).toBe("a{}");
-    await clickInModal("config-shell-apply");
+    await clickInModal('[data-testid="config-shell-apply"]');
 
     await act(async () => {
       container.querySelector("form")!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
@@ -179,7 +173,7 @@ describe("startCodeEditorInjector", () => {
   it("shows the widget's help in the frame's help panel", async () => {
     const { stop } = await inject();
 
-    await clickInModal("config-shell-help");
+    await clickInModal('[data-testid="config-shell-help"]');
     await settleModal();
 
     const help = queryInModal('aside[aria-label="Hilfe"]');
@@ -192,7 +186,7 @@ describe("startCodeEditorInjector", () => {
   it("closes to a placeholder button and reopens with the workspace", async () => {
     const { container, stop } = await inject();
 
-    await clickInModal("config-shell-close");
+    await clickInModal('[data-testid="config-shell-close"]');
     expect(queryInModal('[data-testid="code-editor-modal"]')).toBeNull();
 
     const reopen = queryDeep<HTMLButtonElement>(container, '[data-testid="code-editor-reopen"]')!;
