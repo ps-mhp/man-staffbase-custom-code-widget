@@ -11,14 +11,14 @@ caixa de diálogo de configuração:
 - **CSS** altera o aspeto da página. Aplica-se a **toda a página**,
   não apenas à área do widget.
 - **JavaScript** altera o comportamento da página e pode
-  remodelá-la à vontade.
+  modificá-la à vontade.
 
 ## Antes de começar
 
 Este widget requer conhecimentos de programação. Não existe qualquer verificação que
-impeda que um erro torne a página inutilizável — embora o widget
-detete erros, um código «errado, mas válido» continua a funcionar. Quem pretenda apenas
-incorporar uma imagem, uma tabela ou um artigo, ficará melhor servido com os outros
+impedir que um erro torne a página inutilizável — embora o widget
+intercepte erros, um código «errado, mas válido» continua a funcionar. Quem pretenda apenas
+incorporar uma imagem, uma tabela ou uma publicação, fica melhor servido com os outros
 widgets.
 
 Regra geral: verifique primeiro se o resultado pretendido também é possível com um
@@ -28,11 +28,11 @@ widget normal. O código personalizado é o último recurso, não o primeiro.
 
 | Local | JavaScript | CSS |
 | --- | --- | --- |
-| Página publicada | é executado | tem efeito |
-| Pré-visualização | é executado | tem efeito |
-| Editor do CMS (vista de edição) | **não** é executado | **não** tem efeito |
+| Página publicada | executa-se | tem efeito |
+| Pré-visualização | executa-se | tem efeito |
+| Editor do CMS (vista de edição) | **não** executa-se | **não** tem efeito |
 
-No editor, no local do widget, aparece apenas um mapa com as primeiras linhas
+No editor, no lugar do widget, aparece apenas um cartão com as primeiras linhas
 do código armazenado. Isto é intencional: caso contrário, um script com erros
 destruiria precisamente a interface que está a tentar reparar. Por isso,
 para testar, utilize sempre a **pré-visualização**.

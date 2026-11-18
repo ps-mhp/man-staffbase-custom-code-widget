@@ -1,7 +1,7 @@
 # Código personalizado
 
-El widget de código personalizado es la herramienta ideal para todo aquello que no permiten las funciones estándar del CMS:
-un formato especial, ocultar de forma selectiva un
+El widget de código personalizado es la herramienta ideal para todo aquello que las funciones estándar del CMS
+no permiten: un formato especial, ocultar de forma selectiva un
 elemento o una pequeña interacción.
 
 **No muestra nada por sí mismo.** En la página publicada es
@@ -9,7 +9,7 @@ invisible y no ocupa espacio. Solo contiene el código que introduzcas en
 el cuadro de diálogo de configuración:
 
 - **CSS** modifica el aspecto de la página. Se aplica a **toda la página**,
-  no solo a la zona del widget.
+  no solo al área del widget.
 - **JavaScript** modifica el comportamiento de la página y puede
   modificarla a tu antojo.
 

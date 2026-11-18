@@ -1,6 +1,6 @@
 # Codice personalizzato
 
-Il widget "Codice personalizzato" è lo strumento ideale per tutto ciò che le funzionalità standard del CMS
+Il widget "Codice personalizzato" è lo strumento ideale per tutto ciò che le funzionalità di base del CMS
 non consentono: una formattazione speciale, l'occultamento mirato di un
 elemento, una piccola interazione.
 

@@ -1,6 +1,6 @@
 {
   "title": "Código personalizado",
-  "summary": "Almacena CSS y JavaScript propios para toda la página —de forma invisible—, para los casos en los que no se disponga de herramientas integradas en el CMS.",
+  "summary": "Almacena CSS y JavaScript propios para toda la página —de forma invisible—, para casos en los que no se disponga de herramientas integradas del CMS.",
   "pages": [
     {
       "id": "overview",

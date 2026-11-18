@@ -1,6 +1,6 @@
 {
   "title": "Código personalizado",
-  "summary": "Armazena CSS e JavaScript personalizados para toda a página — de forma invisível, para casos em que não se dispõe de recursos integrados do CMS.",
+  "summary": "Define CSS e JavaScript personalizados para toda a página — de forma invisível, para casos em que não se dispõe de recursos integrados do CMS.",
   "pages": [
     {
       "id": "overview",

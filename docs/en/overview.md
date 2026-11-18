@@ -10,8 +10,8 @@ the configuration dialog:
 
 - **CSS** changes the appearance of the page. It applies to the **entire page**,
   not just the widget’s area.
-- **JavaScript** changes the page’s behavior and can modify it
-  as desired.
+- **JavaScript** changes the page’s behavior and can
+  modify it as you see fit.
 
 ## Before You Begin
 
@@ -34,7 +34,7 @@ standard widget. Custom code is a last resort, not the first option.
 
 In the editor, only a card with the first few lines
 of the stored code appears where the widget would normally be. This is intentional: Otherwise, a faulty script would
-break up the very interface you’re trying to fix. So,
+break the very interface you’re trying to fix. So,
 always use the **Preview** for testing.
 
 For the same reason, **no live example** is shown on this documentation page—

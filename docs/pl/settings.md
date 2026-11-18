@@ -1,29 +1,36 @@
 # Ustawienia
 
-Okno dialogowe konfiguracji zawiera pole **Kod**, którego nigdy nie edytuje się ręcznie.
-Edycja odbywa się w edytorze kodu znajdującym się powyżej; przycisk **Edytuj kod**
-otwiera go ponownie, a przycisk **Gotowe** przenosi aktualny stan do tego pola.
+Okno dialogowe konfiguracji otwiera edytor kodu w trybie pełnoekranowym. Pole
+**Kod** znajdujące się za nim nigdy nie jest edytowane ręcznie; jeśli edytor jest zamknięty,
+przycisk **Edytuj kod** ponownie go otwiera. **Zastosuj** zapisuje
+aktualny stan w polu, **Anuluj** odrzuca go (z pytaniem potwierdzającym, jeśli coś
+zostało zmienione). Zapisanie następuje dopiero wraz z ustawieniami widżetu.
 
-## Zakładki w edytorze kodu
+## Zakładki nad obszarem kodu
 
 | Zakładka | Opis |
 | --- | --- |
-| CSS | Jest wstawiany do strony jako arkusz stylów i dotyczy **całej strony**, a nie tylko obszaru widżetu. Jeśli widget zostanie usunięty, CSS również zniknie. |
-| JavaScript | Działa z dostępem do `container` (elementu widgetu) i `widgetApi` (interfejsu Staffbase). |
+| CSS | Jest wstawiany do strony jako arkusz stylów i dotyczy **całej strony**, a nie tylko obszaru widżetu. Jeśli widżet zostanie usunięty, CSS również zniknie. |
+| JavaScript | Działa z dostępem do `container` (elementu widżetu) i `widgetApi` (interfejsu Staffbase). |
 
-## Czas rozpoczęcia („Uruchom:”, tylko w zakładce JavaScript)
+Czerwona liczba na zakładce wskazuje na błąd w tym języku.
 
-| Wartość | Znaczenie |
+## Wykonaj (panel „Kod” po prawej stronie)
+
+| Opcja | Znaczenie |
 | --- | --- |
-| natychmiast po wyrenderowaniu | Ustawienie domyślne. Skrypt uruchamia się, gdy tylko pojawi się widget. Odpowiednie dla wszystkiego, co nie wymaga innych elementów strony. |
-| po zakończeniu ładowania strony | Skrypt czeka, aż zawartość strony przestanie się zmieniać — dla skryptów, które modyfikują elementy ładowane później. W każdym przypadku uruchamia się najpóźniej po 5 sekundach. |
+| Natychmiast po wyrenderowaniu | Ustawienie domyślne. Skrypt uruchamia się, gdy tylko pojawi się widget. Odpowiednie dla wszystkiego, co nie wymaga innych elementów strony. |
+| Po zakończeniu ładowania strony | Skrypt czeka, aż zawartość strony przestanie się zmieniać — przeznaczone dla skryptów, które modyfikują elementy ładowane później. W każdym przypadku uruchamia się najpóźniej po 5 sekundach. |
 
-CSS obowiązuje w obu przypadkach natychmiast. Jest to zamierzone: dzięki temu strona
+CSS obowiązuje natychmiast w obu przypadkach. Jest to zamierzone: dzięki temu strona
 nie pojawia się na chwilę bez stylizacji.
 
 ## Pomoc w edytorze
 
 | Funkcja | Opis |
 | --- | --- |
-| Sprawdzanie składni | Działa podczas pisania. Pod edytorem pojawia się komunikat „Nie znaleziono błędów składniowych” lub wskazanie miejsca błędu wraz z numerem linii. Nie **blokuje to zapisywania**. W przypadku CSS sprawdzana jest tylko struktura nawiasów, a nie każda właściwość. |
-| Formatowanie | Automatycznie wyrównuje kod. |
+| Sprawdzanie składni | Działa podczas pisania. Wiersz zawierający błąd jest podświetlony na czerwono, a komunikat znajduje się bezpośrednio pod nim. W panelu **Sprawdzanie** dla każdego języka widnieje komunikat „brak błędów” lub „1 błąd w wierszu …”; **Przejdź do miejsca błędu** przenosi do niego. Sprawdzanie **nie blokuje zapisywania**. W przypadku CSS sprawdzana jest tylko struktura nawiasów, a nie każda właściwość. |
+| Pasek stanu | Pod kodem: język, liczba wierszy, błędy oraz pozycja kursora („wiersz 7, kolumna 32”). |
+| Formatowanie | Automatycznie wyrównuje kod wybranego języka. Jeśli kod nie nadaje się do odczytania, pozostaje niezmieniony, a w pasku stanu podawany jest powód. |
+| Cofnij | Strzałka w nagłówku cofa całe kroki edycji; w samym kodzie działa skrót ⌘/Ctrl Z edytora. |
+| Pomoc | Znak zapytania w nagłówku (F1) wyjaśnia języki, czas rozpoczęcia i sprawdzanie. |

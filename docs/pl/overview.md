@@ -1,10 +1,10 @@
 # Kod niestandardowy
 
-Widżet „Kod niestandardowy” to narzędzie do wszystkiego, czego nie oferują standardowe funkcje systemu CMS:
-specjalnego formatowania, celowego ukrycia
-elementu, niewielkiej interakcji.
+Widżet „Kod niestandardowy” to narzędzie do wszystkiego, czego nie pozwalają osiągnąć standardowe funkcje CMS:
+specjalne formatowanie, celowe ukrycie
+elementu, niewielka interakcja.
 
-**Sam w sobie nie wyświetla niczego.** Na opublikowanej stronie jest
+**Sam w sobie nic nie wyświetla.** Na opublikowanej stronie jest
 niewidoczny i nie zajmuje miejsca. Zawiera jedynie kod, który wprowadzisz w
 oknie dialogowym konfiguracji:
 
@@ -18,23 +18,23 @@ oknie dialogowym konfiguracji:
 Ten widget wymaga znajomości programowania. Nie ma żadnego mechanizmu, który
 zapobiegałby sytuacji, w której błąd uniemożliwiłby działanie strony — widget co prawda
 przechwytuje błędy, ale „błędny, ale poprawny” kod i tak zadziała. Kto chce jedynie
-osadzić obraz, tabelę lub wpis, powinien skorzystać z innych
+osadzić obraz, tabelę lub wpis, lepiej skorzysta z innych
 widżetów.
 
 Zasada ogólna: najpierw sprawdź, czy pożądany efekt można uzyskać za pomocą
-zwykłego widżetu. Kod niestandardowy to ostateczność, a nie pierwszy wybór.
+zwykłego widżetu. Kod niestandardowy jest ostatecznością, a nie pierwszym rozwiązaniem.
 
 ## Gdzie działa kod
 
 | Miejsce | JavaScript | CSS |
 | --- | --- | --- |
-| Opublikowana strona | działa | działa |
-| Podgląd | działa | działa |
-| Edytor CMS (widok edycji) | **nie** działa | **nie** działa |
+| Opublikowana strona | działa | ma wpływ |
+| Podgląd | działa | ma wpływ |
+| Edytor CMS (widok edycji) | **nie** działa | **nie** ma wpływu |
 
 W edytorze w miejscu widżetu widoczna jest jedynie karta z pierwszymi wierszami
 zapisanego kodu. Jest to zamierzone: w przeciwnym razie błędny skrypt
-zepsułby właśnie ten interfejs, który próbujesz naprawić. Do
+zniszczyłby właśnie ten interfejs, który chcesz naprawić. Do
 testowania należy więc zawsze używać **podglądu**.
 
 Z tego samego powodu na tej stronie dokumentacji nie jest wyświetlany **żaden przykład na żywo**

@@ -1,6 +1,6 @@
 {
   "title": "Codice personalizzato",
-  "summary": "Inserisce CSS e JavaScript personalizzati per l'intera pagina — in modo invisibile, nei casi in cui non siano disponibili strumenti integrati nel CMS.",
+  "summary": "Memorizza CSS e JavaScript personalizzati per l'intera pagina — in modo invisibile, per i casi in cui non si utilizzano gli strumenti integrati nel CMS.",
   "pages": [
     {
       "id": "overview",
