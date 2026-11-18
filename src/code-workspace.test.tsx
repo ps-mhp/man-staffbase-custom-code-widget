@@ -26,12 +26,21 @@ import { CustomCode } from "./custom-code";
 
 const code = (patch: Partial<CustomCode> = {}): CustomCode => ({ css: "", js: "", timing: "immediate", ...patch });
 
-function Harness({ initial, onValue }: { initial: CustomCode; onValue?: (value: CustomCode) => void }): React.ReactElement {
+function Harness({
+  initial,
+  onValue,
+  onSubmit = () => undefined,
+}: {
+  initial: CustomCode;
+  onValue?: (value: CustomCode) => void;
+  onSubmit?: () => void;
+}): React.ReactElement {
   const [value, setValue] = React.useState(initial);
   return (
     <>
       <CodeWorkspace
         value={value}
+        onSubmit={onSubmit}
         onChange={(next) => {
           setValue(next);
           onValue?.(next);
@@ -175,5 +184,20 @@ describe("CodeWorkspace", () => {
     });
     expect(onValue).not.toHaveBeenCalled();
     expect(viewOf("js").state.doc.toString()).toBe("const = ;");
+  });
+
+  it("ruft bei ⌘/Strg ↵ im Code onSubmit, statt eine Leerzeile einzufügen", async () => {
+    const onSubmit = jest.fn();
+    render(<Harness initial={code({ css: "a{}" })} onSubmit={onSubmit} />);
+    await editorsReady();
+
+    await act(async () => {
+      viewOf("css").contentDOM.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Enter", ctrlKey: true, bubbles: true, cancelable: true }),
+      );
+    });
+
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(viewOf("css").state.doc.toString()).toBe("a{}");
   });
 });

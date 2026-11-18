@@ -78,7 +78,13 @@ export function startCodeEditorInjector(root: ParentNode = document): () => void
     parse: parseCustomCode,
     serialize: encodeCustomCode,
     shell: customCodeShell,
-    render: ({ value, onChange }) =>
-      React.createElement(React.Suspense, { fallback: LOADING }, React.createElement(LazyCodeWorkspace, { value, onChange })),
+    // ⌘/Strg ↵ nimmt CodeMirror sonst als „Leerzeile einfügen“; der Editor
+    // fängt die Taste selbst ab und übernimmt über den Rahmen.
+    render: ({ value, onChange, requestApply }) =>
+      React.createElement(
+        React.Suspense,
+        { fallback: LOADING },
+        React.createElement(LazyCodeWorkspace, { value, onChange, onSubmit: requestApply }),
+      ),
   });
 }

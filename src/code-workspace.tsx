@@ -55,6 +55,8 @@ export { CodeHelp } from "./code-help";
 export interface CodeWorkspaceProps {
   value: CustomCode;
   onChange: (value: CustomCode) => void;
+  /** „Übernehmen und schließen“ des Rahmens, für ⌘/Strg ↵ im Code. */
+  onSubmit: () => void;
 }
 
 const START: CursorPosition = { line: 1, column: 1 };
@@ -118,14 +120,13 @@ function useReveal(active: Language, editors: Record<Language, React.RefObject<C
   return setReveal;
 }
 
-export function CodeWorkspace({ value, onChange }: CodeWorkspaceProps): React.ReactElement {
+export function CodeWorkspace({ value, onChange, onSubmit }: CodeWorkspaceProps): React.ReactElement {
   const [active, setActive] = React.useState<Language>("css");
   const [parsed, setParsed] = React.useState<ParsedLines>({});
   const [cursors, setCursors] = React.useState<Record<Language, CursorPosition>>({ css: START, js: START });
   const cssEditor = React.useRef<CodeEditorHandle | null>(null);
   const jsEditor = React.useRef<CodeEditorHandle | null>(null);
   const editors = React.useMemo(() => ({ css: cssEditor, js: jsEditor }), []);
-  const rootRef = React.useRef<HTMLDivElement | null>(null);
   const formatter = useFormatter(value, onChange);
   const setReveal = useReveal(active, editors);
 
@@ -139,16 +140,6 @@ export function CodeWorkspace({ value, onChange }: CodeWorkspaceProps): React.Re
     setParsed((current) => (current[language] === line ? current : { ...current, [language]: line }));
   }, []);
 
-  // ⌘/Strg ↵ nimmt CodeMirror sonst als „Leerzeile einfügen“ und hält die
-  // Taste an. Der Editor fängt sie deshalb selbst ab und gibt sie hier außerhalb
-  // seiner Fläche noch einmal auf den Weg – zum Rahmen, der übernimmt und
-  // schließt oder, mit Fehlern im Entwurf, sie zeigt.
-  const submitViaShell = (): void => {
-    rootRef.current?.dispatchEvent(
-      new KeyboardEvent("keydown", { key: "Enter", ctrlKey: true, bubbles: true, cancelable: true }),
-    );
-  };
-
   const panel = (language: Language): React.ReactNode => (
     <CodeEditor
       ref={editors[language]}
@@ -159,12 +150,12 @@ export function CodeWorkspace({ value, onChange }: CodeWorkspaceProps): React.Re
       problem={problemMark(problems[language])}
       onCursor={(position) => setCursors((current) => ({ ...current, [language]: position }))}
       onParsedErrorLine={(line) => reportParsedLine(language, line)}
-      onSubmitShortcut={submitViaShell}
+      onSubmitShortcut={onSubmit}
     />
   );
 
   return (
-    <div ref={rootRef} className="flex h-full min-h-0 w-full flex-col" data-testid="code-workspace">
+    <div className="flex h-full min-h-0 w-full flex-col" data-testid="code-workspace">
       <ConfigWorkspace
         className="min-h-0 flex-1"
         inspector={
